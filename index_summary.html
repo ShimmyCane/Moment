@@ -6,10 +6,10 @@
 <title>Moment — Code Summary</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #fffdf5; color: #2b2d42; line-height: 1.6; }
-  .page { max-width: 900px; margin: 0 auto; padding: 32px 24px 64px; }
+  .page { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
   h1 { font-size: 32px; font-weight: 900; margin-bottom: 4px; }
-  h2 { font-size: 20px; font-weight: 800; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 3px solid #2b2d42; }
-  h3 { font-size: 16px; font-weight: 700; margin: 20px 0 6px; color: #4a4a6a; }
+  h2 { font-size: 20px; font-weight: 800; margin: 40px 0 12px; padding-bottom: 6px; border-bottom: 3px solid #2b2d42; }
+  h3 { font-size: 15px; font-weight: 700; margin: 20px 0 6px; color: #4a4a6a; }
   .meta { font-size: 13px; color: #78716c; margin-bottom: 32px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px; }
   th { background: #2b2d42; color: #fff; padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -26,59 +26,136 @@
   .flow-arrow { font-size: 18px; color: #9b5de5; font-weight: 900; }
   .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ddd; vertical-align: middle; margin-right: 4px; }
   .section-card { background: #fff; border: 2px solid #2b2d42; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 3px 3px 0 #2b2d42; }
+  .new-badge { display: inline-block; padding: 1px 7px; background: #ffd23f; border: 1px solid #2b2d42; border-radius: 8px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; vertical-align: middle; margin-left: 6px; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { font-size: 14px; margin-bottom: 3px; }
 </style>
 </head>
 <body>
 <div class="page">
 
 <h1>Moment — Code Summary</h1>
-<div class="meta">Updated 2026-10-22 · Plain HTML/CSS/JS · GitHub Pages + Supabase · 18 files</div>
+<div class="meta">Updated 2026-10-22 · Plain HTML/CSS/JS · GitHub Pages + Supabase · 19 files (+ 1 new SQL)</div>
 
 <!-- ── Navigation Flow ───────────────────────────────────── -->
 <h2>Page Navigation Flow</h2>
 <div class="flow">
   <div class="flow-box">index.html<br><small>Wheel + Spin</small></div>
   <div class="flow-arrow">→ spin →</div>
-  <div class="flow-box">game.html<br><small>Game Card</small></div>
-  <div class="flow-arrow">→ Feedback →</div>
+  <div class="flow-box">game.html<br><small>Rules + Seed Card</small></div>
+  <div class="flow-arrow">→ End Game / Feedback →</div>
   <div class="flow-box">end.html<br><small>Rate + Score</small></div>
   <div class="flow-arrow">→ Save &amp; Spin →</div>
   <div class="flow-box">index.html</div>
 </div>
-<div class="flow">
-  <div style="width:160px"></div>
-  <div class="flow-arrow">↓ Next Game or Skip ↓</div>
+<div class="flow" style="margin-left:4px;gap:8px;">
+  <span style="font-size:13px;color:#78716c;">game.html shortcuts:</span>
+  <div class="flow-box" style="font-size:12px;">Next Game → index (no feedback)</div>
+  <div class="flow-box" style="font-size:12px;">Skip → index (marks skipped)</div>
 </div>
-<div class="flow" style="margin-left:168px">
-  <div class="flow-box">index.html<br><small>(bypass end)</small></div>
-</div>
+
+<!-- ── SQL Run Order ─────────────────────────────────────── -->
+<h2>SQL Migration Order</h2>
+<table>
+  <thead><tr><th>#</th><th>File</th><th>What it does</th><th>Idempotent?</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><code>sql/schema.sql</code></td><td>Creates all 6 tables, indexes, RLS policies, triggers, <code>active_games_view</code></td><td>Yes (IF NOT EXISTS)</td></tr>
+    <tr><td>2</td><td><code>sql/seed.sql</code></td><td>Inserts 15 active games + v1 definitions with stable UUIDs. Links <code>current_version_id</code>.</td><td>Yes (ON CONFLICT DO NOTHING)</td></tr>
+    <tr><td>3</td><td><code>sql/graphic_upgrade.sql</code></td><td>Adds <code>emoji</code> column, sets emoji per slug, rebuilds <code>active_games_view</code> to expose it.</td><td>Yes (ADD COLUMN IF NOT EXISTS, CREATE OR REPLACE VIEW)</td></tr>
+    <tr><td>4</td><td><code>sql/update2.sql</code> <span class="new-badge">new</span></td><td>Drops NOT NULL on <code>wheel_slot</code>. Creates <code>all_games_view</code>. Adds <code>seed_cards</code> + <code>seed_label</code> as v2 to 4 games.</td><td>Yes (ON CONFLICT DO NOTHING)</td></tr>
+  </tbody>
+</table>
 
 <!-- ── Files ────────────────────────────────────────────── -->
 <h2>File Index</h2>
 <table>
   <thead><tr><th>File</th><th>Type</th><th>Role</th></tr></thead>
   <tbody>
-    <tr><td><code>index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Wheel home. Loads games → buildWheel → onSpin → game.html. Contains inline init script.</td></tr>
-    <tr><td><code>game.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Game card. Shows instructions for currentGame. Buttons: Next Game, Feedback, Skip.</td></tr>
-    <tr><td><code>end.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Feedback screen. Rating emojis, player checkboxes, winner picker, notes, session scores.</td></tr>
-    <tr><td><code>admin/index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Admin authoring studio. Auth-gated. JSON editor → validate → draft → publish.</td></tr>
-    <tr><td><code>css/style.css</code></td><td><span class="badge badge-css">CSS</span></td><td>All styles. Family Habits visual language: polka dots, Orbitron/Quicksand/Patrick Hand, offset shadows.</td></tr>
-    <tr><td><code>js/config.js</code></td><td><span class="badge badge-js">JS</span></td><td>3 constants: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_TIMEOUT_MS.</td></tr>
-    <tr><td><code>js/db.js</code></td><td><span class="badge badge-js">JS</span></td><td>Data layer. 3-tier loadGames, CRUD for play events / feedback / scores. Error logging via <code>_logError</code>.</td></tr>
-    <tr><td><code>js/session.js</code></td><td><span class="badge badge-js">JS</span></td><td>sessionStorage state. initSession, getSession, setCurrentGame, clearCurrentGame, selectNextGame (weighted random).</td></tr>
-    <tr><td><code>js/wheel.js</code></td><td><span class="badge badge-js">JS</span></td><td>buildWheel (SVG wedges + text + center cap + pointer polygon), spinTo (CSS transition + callback).</td></tr>
-    <tr><td><code>js/game.js</code></td><td><span class="badge badge-js">JS</span></td><td>Renders currentGame card. Wires Next Game, Feedback, Skip buttons.</td></tr>
-    <tr><td><code>js/end.js</code></td><td><span class="badge badge-js">JS</span></td><td>Rating/players/winner/notes form. _submit() calls Supabase + updates session + clears game.</td></tr>
-    <tr><td><code>js/ui.js</code></td><td><span class="badge badge-js">JS</span></td><td>Floating gear ⚙, settings panel, error panel. IIFE, appends to DOM after DOMContentLoaded.</td></tr>
+    <tr><td><code>index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Wheel home. Inline script: loadGames → buildWheel → onSpin → showGameReveal → game.html. Playlist filter, scores strip, reset button.</td></tr>
+    <tr><td><code>game.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Game card. Instructions, variants. Seed card section (hidden unless game has <code>seed_cards</code>). Buttons: Next Game, Feedback, Skip — or New Card + End Game when seed mode active.</td></tr>
+    <tr><td><code>end.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Feedback screen. Rating emojis, player checkboxes (remembers last round), winner picker, notes textarea, session scores strip. Save &amp; Spin or Just Spin.</td></tr>
+    <tr><td><code>admin/index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Auth-gated admin studio. JSON editor → validate → draft → publish. Feedback review table.</td></tr>
+    <tr><td><code>css/style.css</code></td><td><span class="badge badge-css">CSS</span></td><td>All styles. Polka-dot body, Orbitron/Quicksand/Patrick Hand fonts, offset shadows. Includes: game card, wheel, buttons, settings panel, feedback cards, seed card.</td></tr>
+    <tr><td><code>js/config.js</code></td><td><span class="badge badge-js">JS</span></td><td>3 constants: <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>, <code>SUPABASE_TIMEOUT_MS</code>.</td></tr>
+    <tr><td><code>js/db.js</code></td><td><span class="badge badge-js">JS</span></td><td>Data layer. 3-tier loadGames (Supabase → localStorage cache → games.json). CRUD for play events / feedback / scores. All async functions return <code>true/false</code> and log via <code>_logError</code>.</td></tr>
+    <tr><td><code>js/session.js</code></td><td><span class="badge badge-js">JS</span></td><td>sessionStorage state + localStorage cache/scores. initSession, get/set currentGame, recordPlayEvent, selectNextGame (weighted random avoiding last 3 IDs + last 2 categories).</td></tr>
+    <tr><td><code>js/wheel.js</code></td><td><span class="badge badge-js">JS</span></td><td>buildWheel: selects up to 7 diverse games, interleaves by category, renders SVG wedges + emoji labels + center cap + fixed pointer. spinTo: CSS transition to target wedge, fires callback on transitionend.</td></tr>
+    <tr><td><code>js/game.js</code></td><td><span class="badge badge-js">JS</span></td><td>Renders currentGame card. If <code>def.seed_cards</code> exists: shows seed section, hides normal buttons, wires New Card (animated flip) and End Game. Otherwise shows standard Next Game / Feedback / Skip.</td></tr>
+    <tr><td><code>js/end.js</code></td><td><span class="badge badge-js">JS</span></td><td>Rating / players / winner / notes form. Reads last player selection from localStorage. <code>_submit()</code> calls Supabase, saves players to localStorage, updates session, clears game. Graceful offline path.</td></tr>
+    <tr><td><code>js/ui.js</code></td><td><span class="badge badge-js">JS</span></td><td>IIFE. Floating gear ⚙ (top-right). Settings bottom sheet with 3 tabs: General (playlist, errors), Feedback (all games from <code>all_games_view</code>, tweak editor → save new game_version), Add Game (template + paste JSON → Supabase).</td></tr>
     <tr><td><code>js/admin.js</code></td><td><span class="badge badge-js">JS</span></td><td>Admin auth (Supabase email/password), validate JSON, preview card, save draft, publish, library table.</td></tr>
-    <tr><td><code>data/games.json</code></td><td>JSON</td><td>Offline fallback: 15 complete game objects with definitions. IDs match seed.sql.</td></tr>
-    <tr><td><code>sql/schema.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>6 tables + RLS: games, game_versions, play_sessions, play_events, game_feedback, scores.</td></tr>
-    <tr><td><code>sql/seed.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>Inserts 15 games + versions with stable UUIDs. Updates current_version_id FK after all inserts.</td></tr>
-    <tr><td><code>sql/graphic_upgrade.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>Adds <code>emoji VARCHAR(10)</code> column to games. Sets emoji per game (15 slugs). Rebuilds <code>active_games_view</code> to expose the new column. Run after seed.sql.</td></tr>
-    <tr><td><code>sql/games_batch2.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>50 new games (status=draft, no wheel slot). Relaxes <code>wheel_slot NOT NULL</code> to allow drafts. 10 games per category, difficulty easy/medium/hard. Run after graphic_upgrade.sql.</td></tr>
-    <tr><td><code>admin/index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Admin authoring studio. Auth-gated. JSON editor → validate → draft → publish. Feedback Review table (ratings by game). Show Template button.</td></tr>
+    <tr><td><code>data/games.json</code></td><td>JSON</td><td>Offline fallback. 15 complete game objects with definitions. IDs match seed.sql stable UUIDs.</td></tr>
+    <tr><td><code>sql/schema.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>6 tables, RLS, indexes, updated_at trigger, <code>active_games_view</code>.</td></tr>
+    <tr><td><code>sql/seed.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>15 games + v1 definitions with stable UUIDs. Links <code>current_version_id</code> after all inserts.</td></tr>
+    <tr><td><code>sql/graphic_upgrade.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>Adds <code>emoji</code> column. Sets emoji per slug. Rebuilds <code>active_games_view</code> to expose it.</td></tr>
+    <tr><td><code>sql/games_batch2.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>50 new draft games (no wheel slot). 10 per category, easy/medium/hard.</td></tr>
+    <tr><td><code>sql/update2.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>Makes <code>wheel_slot</code> nullable. Creates <code>all_games_view</code>. Adds <code>seed_cards</code>/<code>seed_label</code> as v2 to Mini Charades, Forbidden Word, Three Things, Would You Rather.</td></tr>
   </tbody>
 </table>
+
+<!-- ── Seed Cards Feature ────────────────────────────────── -->
+<h2>Seed Cards Feature <span class="new-badge">new</span></h2>
+<div class="section-card">
+  <p style="font-size:14px;margin-bottom:10px;">Games that benefit from a prompt bank store a <code>seed_cards</code> array (and optional <code>seed_label</code> string) inside their <code>definition</code> JSONB. When <code>game.js</code> detects this field, it switches the game page into <strong>seed card mode</strong>.</p>
+  <h3>Seed mode UI (game.html)</h3>
+  <ul>
+    <li>Normal <em>Next Game</em> and <em>Feedback</em> buttons are hidden.</li>
+    <li>A large yellow card displays a random prompt drawn from <code>seed_cards</code>.</li>
+    <li><strong>New Card</strong> — animates a horizontal flip, draws the next prompt (avoids repeats until the deck cycles).</li>
+    <li><strong>End Game</strong> — navigates to <code>end.html</code> for rating and scoring.</li>
+    <li><strong>Skip</strong> button remains unchanged (marks event as skipped, returns to wheel).</li>
+  </ul>
+  <h3>Games with seed cards (v2 definitions)</h3>
+  <table>
+    <thead><tr><th>Game</th><th>seed_label</th><th>Cards</th></tr></thead>
+    <tbody>
+      <tr><td>🎬 Mini Charades</td><td>"Act this out:"</td><td>31 prompts — animals, jobs, storybook characters</td></tr>
+      <tr><td>🤐 Forbidden Word</td><td>"Describe this — don't say the word:"</td><td>25 everyday objects</td></tr>
+      <tr><td>🎯 Three Things</td><td>"Name 3 things in this category:"</td><td>24 categories</td></tr>
+      <tr><td>🤔 Would You Rather</td><td>"Would you rather…"</td><td>20 dilemmas</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;"><strong>Extensible:</strong> any game can gain a seed card bank by adding <code>"seed_cards": [...]</code> to its definition JSON — no code changes needed.</p>
+</div>
+
+<!-- ── Settings Panel ─────────────────────────────────────── -->
+<h2>Settings Panel (ui.js)</h2>
+<div class="section-card">
+  <p style="font-size:14px;margin-bottom:10px;">Floating ⚙ button (fixed, top-right). Tap opens a bottom sheet with 3 tabs.</p>
+  <table>
+    <thead><tr><th>Tab</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><strong>General</strong></td><td>Supabase connection dot. Playlist selector (All / New / ⭐ Top / Felix's / Mix). Show Errors toggle.</td></tr>
+      <tr><td><strong>Feedback</strong></td><td>Press Load → queries <code>all_games_view</code> + <code>game_feedback</code>. Shows every game (active and draft/archived) sorted by: feedback-having first, then alphabetical. Status badge on non-active games. Tap ✏ to open tweak editor: fetches current definition from <code>game_versions</code>, edit JSON, save locally (localStorage override) or save to Supabase as new version (updates <code>current_version_id</code>).</td></tr>
+      <tr><td><strong>Add Game</strong></td><td>Displays accepted JSON template (copyable). Paste-and-validate panel. Submit inserts into <code>games</code> (status=draft, <code>wheel_slot</code> nullable) + <code>game_versions</code> + links <code>current_version_id</code>.</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;"><strong>Playlist filter</strong> persists in <code>localStorage('moment_playlist')</code>. Changing playlist triggers <code>window._onPlaylistChange(id)</code> which rebuilds the wheel and updates the Spin button label.</p>
+</div>
+
+<!-- ── localStorage Keys ─────────────────────────────────── -->
+<h2>localStorage Keys</h2>
+<table>
+  <thead><tr><th>Key</th><th>Type</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>moment_playlist</code></td><td>string</td><td>'all' | 'new' | 'top' | 'felix' | 'mix'. Active playlist filter.</td></tr>
+    <tr><td><code>moment_games_cache</code></td><td>JSON</td><td>24h game cache: <code>{ cachedAt, games[] }</code>. Used when Supabase is offline.</td></tr>
+    <tr><td><code>moment_persistent_scores</code></td><td>JSON</td><td>Cumulative all-time scores per player.</td></tr>
+    <tr><td><code>moment_game_overrides</code></td><td>JSON</td><td>Local definition tweaks: <code>{ [gameId]: { definition, updatedAt } }</code>.</td></tr>
+    <tr><td><code>moment_show_errors</code></td><td>'1'|'0'</td><td>Whether the error panel is visible.</td></tr>
+    <tr><td><code>moment_last_players</code></td><td>JSON</td><td><span class="new-badge">new</span> Array of player names checked in the last round. Pre-fills end.html player grid on the next game.</td></tr>
+  </tbody>
+</table>
+
+<!-- ── sessionStorage Keys ───────────────────────────────── -->
+<h2>sessionStorage Key</h2>
+<table>
+  <thead><tr><th>Key</th><th>Shape</th></tr></thead>
+  <tbody>
+    <tr><td><code>moment_session</code></td><td><code>{ sessionId, startedAt, players[], currentGame, history[], scores{}, wheelRotation, roundNumber }</code></td></tr>
+  </tbody>
+</table>
+<p style="font-size:13px;"><code>currentGame</code> is the full game object + <code>selectedAt</code> + <code>playEventId</code>. Cleared by <code>clearCurrentGame()</code> after end.html submits or the user skips.</p>
 
 <!-- ── CSS Variables ────────────────────────────────────── -->
 <h2>CSS Variables (css/style.css)</h2>
@@ -88,13 +165,13 @@
   <thead><tr><th>Variable</th><th>Value</th><th>Usage</th></tr></thead>
   <tbody>
     <tr><td><code>--ink</code></td><td><span class="swatch" style="background:#2b2d42"></span>#2b2d42</td><td>Primary text, borders, shadows</td></tr>
-    <tr><td><code>--paper</code></td><td><span class="swatch" style="background:#fffdf5;border-color:#ccc"></span>#fffdf5</td><td>Body background, gear button bg</td></tr>
-    <tr><td><code>--sun</code></td><td><span class="swatch" style="background:#ffd23f"></span>#ffd23f</td><td>Spin button, app title bg, selected states</td></tr>
-    <tr><td><code>--sky</code></td><td><span class="swatch" style="background:#4cc9f0"></span>#4cc9f0</td><td>Polka dot color in body background</td></tr>
-    <tr><td><code>--mint</code></td><td><span class="swatch" style="background:#6bd8a0"></span>#6bd8a0</td><td>Checked player chips</td></tr>
-    <tr><td><code>--pink</code></td><td><span class="swatch" style="background:#ff6b9d"></span>#ff6b9d</td><td>Available, not yet used</td></tr>
-    <tr><td><code>--grape</code></td><td><span class="swatch" style="background:#9b5de5"></span>#9b5de5</td><td>Available, not yet used</td></tr>
-    <tr><td><code>--coral</code></td><td><span class="swatch" style="background:#ff7b54"></span>#ff7b54</td><td>Available, not yet used</td></tr>
+    <tr><td><code>--paper</code></td><td><span class="swatch" style="background:#fffdf5;border-color:#ccc"></span>#fffdf5</td><td>Body background, gear button, settings panel</td></tr>
+    <tr><td><code>--sun</code></td><td><span class="swatch" style="background:#ffd23f"></span>#ffd23f</td><td>Spin button, app title, selected states, seed card background</td></tr>
+    <tr><td><code>--sky</code></td><td><span class="swatch" style="background:#4cc9f0"></span>#4cc9f0</td><td>Polka dot body background</td></tr>
+    <tr><td><code>--mint</code></td><td><span class="swatch" style="background:#6bd8a0"></span>#6bd8a0</td><td>Checked player chips, toast message</td></tr>
+    <tr><td><code>--pink</code></td><td><span class="swatch" style="background:#ff6b9d"></span>#ff6b9d</td><td>Reserved</td></tr>
+    <tr><td><code>--grape</code></td><td><span class="swatch" style="background:#9b5de5"></span>#9b5de5</td><td>Reserved</td></tr>
+    <tr><td><code>--coral</code></td><td><span class="swatch" style="background:#ff7b54"></span>#ff7b54</td><td>Reserved</td></tr>
   </tbody>
 </table>
 
@@ -102,11 +179,11 @@
 <table>
   <thead><tr><th>Element</th><th>border-radius</th><th>box-shadow</th></tr></thead>
   <tbody>
-    <tr><td>Cards (.game-card)</td><td><code>20px 10px 22px 12px / 12px 22px 10px 20px</code></td><td><code>5px 5px 0 var(--ink)</code></td></tr>
-    <tr><td>Buttons (.btn)</td><td><code>14px 24px 14px 24px</code></td><td><code>4px 4px 0 var(--ink)</code></td></tr>
+    <tr><td>Cards (.game-card, .seed-card)</td><td><code>20px 10px 22px 12px / 12px 22px 10px 20px</code></td><td><code>5px 5px 0 var(--ink)</code></td></tr>
+    <tr><td>Buttons (.btn, .spin-btn)</td><td><code>14px 24px 14px 24px</code></td><td><code>4px 4px 0 var(--ink)</code></td></tr>
     <tr><td>Button :active</td><td>—</td><td><code>transform: translate(3px,3px); box-shadow: 1px 1px 0</code></td></tr>
     <tr><td>Wheel wrapper</td><td><code>50%</code></td><td><code>5px 5px 0 var(--ink)</code></td></tr>
-    <tr><td>Floating gear</td><td><code>50%</code></td><td><code>4px 4px 0 var(--ink)</code></td></tr>
+    <tr><td>Settings panel</td><td><code>22px 22px 0 0</code></td><td><code>0 -5px 0 var(--ink)</code></td></tr>
   </tbody>
 </table>
 
@@ -118,13 +195,13 @@
   <table>
     <thead><tr><th>Function</th><th>Returns</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><code>loadGames()</code></td><td>Game[] (async)</td><td>3-tier: Supabase → cache → games.json. Sets offline banner on fallback.</td></tr>
-      <tr><td><code>createSession(mode)</code></td><td>UUID | null</td><td>Inserts into play_sessions. Offline = null (graceful).</td></tr>
-      <tr><td><code>createPlayEvent(sessionId, gameId, versionId)</code></td><td>UUID | null</td><td>Inserts into play_events on spin.</td></tr>
-      <tr><td><code>updatePlayEvent(id, updates)</code></td><td>void</td><td>Updates outcome, players, winner on done/skip/end.</td></tr>
-      <tr><td><code>submitFeedback(…)</code></td><td>void</td><td>Inserts into game_feedback. Only called if selectedRating !== null.</td></tr>
-      <tr><td><code>saveScore(sessionId, eventId, player, points)</code></td><td>void</td><td>Inserts into scores. Only called if winner selected.</td></tr>
-      <tr><td><code>_logError(context, message)</code></td><td>void</td><td>Pushes to window._momentErrors[]. Calls window._onErrorLogged() if set.</td></tr>
+      <tr><td><code>loadGames()</code></td><td>Game[] (async)</td><td>Supabase <code>active_games_view</code> → localStorage cache (24h) → data/games.json. Shows offline banner on fallback.</td></tr>
+      <tr><td><code>createSession(mode)</code></td><td>UUID | null</td><td>Inserts into <code>play_sessions</code>. Returns null on offline.</td></tr>
+      <tr><td><code>createPlayEvent(sessionId, gameId, versionId)</code></td><td>UUID | null</td><td>Inserts into <code>play_events</code> on spin. null on offline.</td></tr>
+      <tr><td><code>updatePlayEvent(id, updates)</code></td><td>boolean</td><td>Updates outcome / players / winner. Returns false and logs on error.</td></tr>
+      <tr><td><code>submitFeedback(eventId, gameId, versionId, rating, notes)</code></td><td>boolean</td><td>Inserts into <code>game_feedback</code>. Skips <code>game_version_id</code> if null to avoid NOT NULL violation.</td></tr>
+      <tr><td><code>saveScore(sessionId, eventId, player, pts)</code></td><td>boolean</td><td>Inserts into <code>scores</code>. Only called when winner selected.</td></tr>
+      <tr><td><code>_logError(context, message)</code></td><td>void</td><td>Pushes to <code>window._momentErrors[]</code>. Fires <code>window._onErrorLogged()</code> if set. Gear badge count updates.</td></tr>
     </tbody>
   </table>
 </div>
@@ -134,14 +211,15 @@
   <table>
     <thead><tr><th>Function</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><code>initSession()</code></td><td>Creates session in sessionStorage if none exists. Players default: Athena, Felix, Ying, Jimmy.</td></tr>
-      <tr><td><code>getSession() / _write(s)</code></td><td>Read/write sessionStorage JSON blob.</td></tr>
-      <tr><td><code>setCurrentGame(game)</code></td><td>Stores game + selectedAt timestamp. game.html reads this.</td></tr>
-      <tr><td><code>clearCurrentGame()</code></td><td>Sets session.currentGame = null.</td></tr>
-      <tr><td><code>recordPlayEvent(eventId, gameId, category)</code></td><td>Appends to session.history[], increments roundNumber. Used for smart sequencing.</td></tr>
-      <tr><td><code>selectNextGame(games)</code></td><td>Weighted random. Avoids last 3 game IDs and last 2 categories. Returns a game object.</td></tr>
-      <tr><td><code>getWheelRotation() / setWheelRotation(deg)</code></td><td>Persists cumulative spin angle across spins.</td></tr>
+      <tr><td><code>initSession()</code></td><td>Creates session in sessionStorage if none exists. Default players: Athena, Felix, Ying, Jimmy.</td></tr>
+      <tr><td><code>getSession()</code></td><td>Returns parsed session object from sessionStorage.</td></tr>
+      <tr><td><code>setCurrentGame(game)</code></td><td>Stores game + <code>selectedAt</code>. game.html reads this on load.</td></tr>
+      <tr><td><code>clearCurrentGame()</code></td><td>Sets <code>session.currentGame = null</code>.</td></tr>
+      <tr><td><code>recordPlayEvent(eventId, gameId, category)</code></td><td>Appends to <code>session.history[]</code>, increments <code>roundNumber</code>.</td></tr>
+      <tr><td><code>selectNextGame(games)</code></td><td>Weighted random. Avoids last 3 game IDs and last 2 categories. Weights: −7 for same-as-last category, +4 for unseen category.</td></tr>
+      <tr><td><code>getWheelRotation() / setWheelRotation(deg)</code></td><td>Persists cumulative spin angle so wheel resumes at correct position after rebuild.</td></tr>
       <tr><td><code>getCachedGames() / setCachedGames(games)</code></td><td>localStorage cache with 24h TTL.</td></tr>
+      <tr><td><code>resetSessionScores()</code></td><td>Resets <code>session.scores</code> to all-zero map.</td></tr>
     </tbody>
   </table>
 </div>
@@ -151,15 +229,28 @@
   <table>
     <thead><tr><th>Constant</th><th>Value</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><code>WEDGE_COUNT</code></td><td>15</td><td>Number of wheel wedges = number of games</td></tr>
-      <tr><td><code>WEDGE_DEG</code></td><td>24°</td><td>360 / 15</td></tr>
-      <tr><td><code>WHEEL_RADIUS</code></td><td>130</td><td>SVG units. Outer rim of wheel.</td></tr>
-      <tr><td><code>TEXT_RADIUS</code></td><td>90</td><td>SVG units. Where game name text is placed.</td></tr>
-      <tr><td><code>CENTER_X / CENTER_Y</code></td><td>150 / 150</td><td>Center of 300×300 viewBox</td></tr>
+      <tr><td><code>MAX_WEDGES</code></td><td>7</td><td>Maximum wedges displayed at once (not the total number of games).</td></tr>
+      <tr><td><code>WHEEL_RADIUS</code></td><td>130</td><td>SVG units. Outer rim of each wedge.</td></tr>
+      <tr><td><code>TEXT_RADIUS</code></td><td>90</td><td>SVG units. Radial position of emoji/label text.</td></tr>
+      <tr><td><code>CENTER_X / CENTER_Y</code></td><td>150 / 150</td><td>Center of 300×300 viewBox.</td></tr>
     </tbody>
   </table>
-  <p style="margin-top:12px;font-size:13px;"><strong>buildWheel(games, svgEl)</strong> — creates <code>#wheel-group</code> with wedge paths + text labels, center cap circle, then appends a fixed pointer polygon (id=<code>wheel-pointer</code>) outside the group. Pointer: <code>points="136,10 164,10 150,28"</code> — all within the 150-unit clip circle.</p>
-  <p style="font-size:13px;"><strong>spinTo(gameIndex, currentRotation, svgEl, onComplete)</strong> — calculates final rotation so target wedge aligns to pointer (12-o'clock). Adds 5×360° for visual spin. Fires <code>onComplete(finalRotation)</code> on <code>transitionend</code>.</p>
+  <p style="font-size:13px;margin-top:8px;"><strong>buildWheel(games, svgEl)</strong> — calls <code>_selectDisplayGames</code> to pick up to 7 games (one per category guaranteed, rest random), shuffled so same-category wedges are interleaved. Renders: wedge paths (category color, shade cycling), emoji text labels (flipped if in bottom half), center cap circle, fixed pointer polygon (<code>id=wheel-pointer</code>, outside <code>#wheel-group</code> so it stays above the spinning layer). Stores display list on <code>svgEl._games</code>.</p>
+  <p style="font-size:13px;"><strong>spinTo(gameId, currentRotation, svgEl, onComplete)</strong> — looks up game UUID in <code>svgEl._games</code>. If not on wheel, calls <code>onComplete</code> immediately. Otherwise calculates final rotation (target wedge at 12-o'clock) + 8×360° of spin. Fires <code>onComplete(finalRotation)</code> on <code>transitionend</code>.</p>
+</div>
+
+<div class="section-card">
+  <h3>game.js — Game Page</h3>
+  <p style="font-size:14px;margin-bottom:8px;">Reads <code>session.currentGame</code> on load. Renders category badge, title, meta (duration/players/energy), numbered instruction steps, variants section.</p>
+  <p style="font-size:13px;"><strong>Seed card mode:</strong> if <code>def.seed_cards</code> is a non-empty array, hides <code>#mainActions</code>, shows <code>#seedSection</code>. Sets label from <code>def.seed_label</code>. <code>drawCard(animate)</code> picks a random unused index; with <code>animate=true</code> plays a scaleX flip animation and swaps text at the midpoint. New Card button calls <code>drawCard(true)</code>; End Game navigates to <code>end.html</code>.</p>
+</div>
+
+<div class="section-card">
+  <h3>end.js — Feedback + Scoring</h3>
+  <p style="font-size:14px;margin-bottom:8px;">Reads <code>session.currentGame</code>. Shows offline warning if <code>playEventId</code> is null.</p>
+  <p style="font-size:13px;"><strong>Player grid:</strong> initial checked state from <code>localStorage('moment_last_players')</code>, falling back to <code>session.players</code>. Checking/unchecking a player immediately rebuilds the winner grid.</p>
+  <p style="font-size:13px;"><strong>Save guard:</strong> notes typed with no rating selected → inline warning + scroll to rating row. Button re-enabled on any cloud failure so the user can retry.</p>
+  <p style="font-size:13px;"><strong>_submit() flow:</strong> save player selection to localStorage → updatePlayEvent → submitFeedback (if rated) → saveScore (if winner) → updateScores + recordPlayEvent + clearCurrentGame (always, even on cloud failure). Returns <code>{ ok, navigateAnyway, errors }</code>.</p>
 </div>
 
 <!-- ── Supabase Schema ───────────────────────────────────── -->
@@ -167,39 +258,39 @@
 <table>
   <thead><tr><th>Table</th><th>Key Columns</th><th>RLS (anon)</th></tr></thead>
   <tbody>
-    <tr><td><code>games</code></td><td>id (UUID), slug, title, short_label (≤15 chars), category, wheel_slot (0–14, nullable for drafts), emoji (added by graphic_upgrade.sql), current_version_id FK, status (active/draft/deprecated/archived)</td><td>SELECT active only</td></tr>
-    <tr><td><code>game_versions</code></td><td>id, game_id FK, version_number, definition (JSONB)</td><td>SELECT via active_games_view</td></tr>
-    <tr><td><code>play_sessions</code></td><td>id, mode, created_at</td><td>INSERT</td></tr>
-    <tr><td><code>play_events</code></td><td>id, session_id FK, game_id FK, outcome (played/skipped/completed), players[], winner, started_at, ended_at</td><td>INSERT + UPDATE own</td></tr>
-    <tr><td><code>game_feedback</code></td><td>id, play_event_id FK, game_id FK, rating (1/0/-1), notes</td><td>INSERT only (SELECT requires auth)</td></tr>
+    <tr><td><code>games</code></td><td>id, slug, title, short_label (≤15 chars), category, wheel_slot (nullable after update2.sql), emoji, current_version_id FK, status (active/draft/deprecated/archived)</td><td>SELECT active only</td></tr>
+    <tr><td><code>game_versions</code></td><td>id, game_id FK, version_number, definition (JSONB: instructions, variants, seed_cards?, seed_label?, duration, players, energy, scoring…)</td><td>SELECT via active_games_view</td></tr>
+    <tr><td><code>play_sessions</code></td><td>id, mode, started_at</td><td>INSERT + SELECT</td></tr>
+    <tr><td><code>play_events</code></td><td>id, session_id FK, game_id FK, game_version_id FK, outcome (completed/skipped/abandoned), players[], winner</td><td>INSERT + UPDATE + SELECT</td></tr>
+    <tr><td><code>game_feedback</code></td><td>id, play_event_id FK, game_id FK, game_version_id FK (nullable), rating (1/0/−1), notes, created_at</td><td>INSERT only (SELECT requires auth)</td></tr>
     <tr><td><code>scores</code></td><td>id, session_id FK, play_event_id FK, player_name, points</td><td>INSERT + SELECT</td></tr>
   </tbody>
 </table>
-<p style="font-size:13px;"><code>games.current_version_id → game_versions.id</code> is a DEFERRABLE INITIALLY DEFERRED circular FK to allow insert ordering in seed.sql.</p>
+<p style="font-size:13px;"><code>games.current_version_id → game_versions.id</code> is DEFERRABLE INITIALLY DEFERRED (circular FK) to allow insert ordering in seed.sql.</p>
 
-<h3>active_games_view — what it is and why it exists</h3>
+<h3>Views</h3>
+<table>
+  <thead><tr><th>View</th><th>Filter</th><th>Used by</th></tr></thead>
+  <tbody>
+    <tr><td><code>active_games_view</code></td><td><code>WHERE status = 'active'</code></td><td><code>db.js loadGames()</code> — the only game-loading path for the wheel</td></tr>
+    <tr><td><code>all_games_view</code> <span class="new-badge">new</span></td><td>No filter (all statuses)</td><td><code>ui.js _loadFeedback()</code> — settings Feedback tab shows every game including drafts/archived</td></tr>
+  </tbody>
+</table>
+
+<!-- ── Playlist System ───────────────────────────────────── -->
+<h2>Playlist System</h2>
 <div class="section-card">
-  <p style="font-size:14px;margin-bottom:10px;"><code>active_games_view</code> is a PostgreSQL <strong>VIEW</strong> (not a table). It is the <em>only</em> thing <code>loadGames()</code> in db.js queries. It combines two tables in one read:</p>
   <table>
-    <thead><tr><th>Source</th><th>Columns exposed</th></tr></thead>
+    <thead><tr><th>ID</th><th>Label</th><th>Filter logic</th></tr></thead>
     <tbody>
-      <tr><td><code>games g</code></td><td>id, slug, title, short_label, category, wheel_slot, status, emoji, current_version_id, updated_at</td></tr>
-      <tr><td><code>game_versions gv</code> (LEFT JOIN on <code>current_version_id</code>)</td><td>definition (JSONB), version_number, schema_version</td></tr>
+      <tr><td><code>all</code></td><td>All</td><td>No filter — all loaded games</td></tr>
+      <tr><td><code>new</code></td><td>New</td><td>Games not in <code>session.history</code> last 3. Falls back to all if &lt;3 remain.</td></tr>
+      <tr><td><code>top</code></td><td>⭐ Top</td><td>Top 8 by average rating from <code>game_feedback</code> (requires Supabase). Falls back to all.</td></tr>
+      <tr><td><code>felix</code></td><td>Felix's</td><td>Top 8 games Felix has won most, from <code>play_events</code>. Falls back to all.</td></tr>
+      <tr><td><code>mix</code></td><td>Mix</td><td>Stable random 8 chosen at session start. Falls back to all.</td></tr>
     </tbody>
   </table>
-  <p style="font-size:13px;margin-top:10px;"><strong>Filter:</strong> <code>WHERE g.status = 'active'</code> — draft, deprecated, and archived games are completely invisible to the app. The 50 batch-2 games start as draft and will not appear on the wheel until an admin sets their status to active and assigns a wheel slot.</p>
-  <p style="font-size:13px;margin-top:8px;"><strong>Why a view and not a direct table query?</strong> The app needs the game's JSONB definition (instructions, scoring, etc.) alongside the game metadata in a single query. Without the view, every page load would need a JOIN — the view encapsulates that JOIN and lets <code>loadGames()</code> stay a simple <code>.select('*')</code>.</p>
-  <p style="font-size:13px;margin-top:8px;"><strong>RLS note:</strong> The anon role's SELECT policy on <code>games</code> (<code>WHERE status = 'active'</code>) already restricts what the view can return. The view adds no extra security — it only simplifies the query shape.</p>
-  <p style="font-size:13px;margin-top:8px;"><strong>After graphic_upgrade.sql:</strong> The view is rebuilt to also expose <code>g.emoji</code>. The wheel's label renderer reads <code>game.emoji</code> first (from the view), falling back to the <code>GAME_EMOJI_FALLBACK</code> dict in wheel.js if the column is null (offline / pre-migration).</p>
-</div>
-
-<!-- ── Error / Settings UI ──────────────────────────────── -->
-<h2>Error & Settings UI (ui.js)</h2>
-<div class="section-card">
-  <p style="font-size:14px;">Appended to DOM by IIFE after DOMContentLoaded. Elements: <strong>floating gear button</strong> (fixed bottom-right), <strong>settings panel</strong> (above gear, hidden by default), <strong>error panel</strong> (inside .app-container, bottom of page).</p>
-  <p style="font-size:13px;margin-top:8px;"><strong>Persistence:</strong> <code>localStorage.getItem('moment_show_errors')</code> = '1' | '0'<br>
-  <strong>Error hook:</strong> <code>window._onErrorLogged</code> — set by ui.js, called by db.js <code>_logError</code><br>
-  <strong>Error source:</strong> <code>window._momentErrors[]</code> — populated by db.js, read by ui.js</p>
+  <p style="font-size:13px;">Playlist data loaded non-blocking at app start via <code>loadPlaylistData(games)</code>. Wheel rebuilt on each playlist change via <code>window._onPlaylistChange(id)</code>.</p>
 </div>
 
 </div>

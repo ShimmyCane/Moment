@@ -52,6 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
     list.appendChild(li);
   });
 
+  // Options — random round modifier
+  if (Array.isArray(def.options) && def.options.length > 0) {
+    const idx = Math.floor(Math.random() * def.options.length);
+    document.getElementById('optionsText').textContent = def.options[idx];
+    document.getElementById('optionsSection').classList.remove('hidden');
+  }
+
   // Variants
   if (def.variants && def.variants.length > 0) {
     const section = document.getElementById('variantsSection');

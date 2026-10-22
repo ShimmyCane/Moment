@@ -327,6 +327,37 @@ body {
   line-height: 1.5;
 }
 
+/* ── Options (random round modifier) ──────────────────────── */
+
+.options-section {
+  border-top: 2px dashed #a5f3fc;
+  padding-top: 14px;
+}
+
+.options-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0891b2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.options-text {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 10px 14px;
+  background: #ecfeff;
+  border: 2px solid #a5f3fc;
+  border-radius: 12px 18px 12px 18px;
+}
+
 /* ── Action Buttons ────────────────────────────────────────── */
 
 .btn-row {
@@ -484,7 +515,7 @@ body {
 
 .floating-gear {
   position: fixed;
-  top: max(16px, env(safe-area-inset-top));
+  bottom: max(20px, env(safe-area-inset-bottom));
   right: 16px;
   width: 48px;
   height: 48px;
