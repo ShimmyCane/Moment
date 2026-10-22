@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moment — Code Summary</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #fffdf5; color: #2b2d42; line-height: 1.6; }
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { font-size: 32px; font-weight: 900; margin-bottom: 4px; }
+  h2 { font-size: 20px; font-weight: 800; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 3px solid #2b2d42; }
+  h3 { font-size: 16px; font-weight: 700; margin: 20px 0 6px; color: #4a4a6a; }
+  .meta { font-size: 13px; color: #78716c; margin-bottom: 32px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px; }
+  th { background: #2b2d42; color: #fff; padding: 8px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9f9f0; }
+  code { font-family: 'Courier New', monospace; font-size: 12px; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; color: #1e3a5f; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge-html { background: #fde68a; color: #92400e; }
+  .badge-js   { background: #d1fae5; color: #065f46; }
+  .badge-css  { background: #ddd6fe; color: #5b21b6; }
+  .badge-sql  { background: #fee2e2; color: #991b1b; }
+  .flow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+  .flow-box { padding: 8px 14px; background: #fff; border: 2px solid #2b2d42; border-radius: 12px; font-size: 13px; font-weight: 700; box-shadow: 3px 3px 0 #2b2d42; }
+  .flow-arrow { font-size: 18px; color: #9b5de5; font-weight: 900; }
+  .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #ddd; vertical-align: middle; margin-right: 4px; }
+  .section-card { background: #fff; border: 2px solid #2b2d42; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; box-shadow: 3px 3px 0 #2b2d42; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Moment — Code Summary</h1>
+<div class="meta">Updated 2026-10-22 · Plain HTML/CSS/JS · GitHub Pages + Supabase · 18 files</div>
+
+<!-- ── Navigation Flow ───────────────────────────────────── -->
+<h2>Page Navigation Flow</h2>
+<div class="flow">
+  <div class="flow-box">index.html<br><small>Wheel + Spin</small></div>
+  <div class="flow-arrow">→ spin →</div>
+  <div class="flow-box">game.html<br><small>Game Card</small></div>
+  <div class="flow-arrow">→ Feedback →</div>
+  <div class="flow-box">end.html<br><small>Rate + Score</small></div>
+  <div class="flow-arrow">→ Save &amp; Spin →</div>
+  <div class="flow-box">index.html</div>
+</div>
+<div class="flow">
+  <div style="width:160px"></div>
+  <div class="flow-arrow">↓ Next Game or Skip ↓</div>
+</div>
+<div class="flow" style="margin-left:168px">
+  <div class="flow-box">index.html<br><small>(bypass end)</small></div>
+</div>
+
+<!-- ── Files ────────────────────────────────────────────── -->
+<h2>File Index</h2>
+<table>
+  <thead><tr><th>File</th><th>Type</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td><code>index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Wheel home. Loads games → buildWheel → onSpin → game.html. Contains inline init script.</td></tr>
+    <tr><td><code>game.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Game card. Shows instructions for currentGame. Buttons: Next Game, Feedback, Skip.</td></tr>
+    <tr><td><code>end.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Feedback screen. Rating emojis, player checkboxes, winner picker, notes, session scores.</td></tr>
+    <tr><td><code>admin/index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Admin authoring studio. Auth-gated. JSON editor → validate → draft → publish.</td></tr>
+    <tr><td><code>css/style.css</code></td><td><span class="badge badge-css">CSS</span></td><td>All styles. Family Habits visual language: polka dots, Orbitron/Quicksand/Patrick Hand, offset shadows.</td></tr>
+    <tr><td><code>js/config.js</code></td><td><span class="badge badge-js">JS</span></td><td>3 constants: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_TIMEOUT_MS.</td></tr>
+    <tr><td><code>js/db.js</code></td><td><span class="badge badge-js">JS</span></td><td>Data layer. 3-tier loadGames, CRUD for play events / feedback / scores. Error logging via <code>_logError</code>.</td></tr>
+    <tr><td><code>js/session.js</code></td><td><span class="badge badge-js">JS</span></td><td>sessionStorage state. initSession, getSession, setCurrentGame, clearCurrentGame, selectNextGame (weighted random).</td></tr>
+    <tr><td><code>js/wheel.js</code></td><td><span class="badge badge-js">JS</span></td><td>buildWheel (SVG wedges + text + center cap + pointer polygon), spinTo (CSS transition + callback).</td></tr>
+    <tr><td><code>js/game.js</code></td><td><span class="badge badge-js">JS</span></td><td>Renders currentGame card. Wires Next Game, Feedback, Skip buttons.</td></tr>
+    <tr><td><code>js/end.js</code></td><td><span class="badge badge-js">JS</span></td><td>Rating/players/winner/notes form. _submit() calls Supabase + updates session + clears game.</td></tr>
+    <tr><td><code>js/ui.js</code></td><td><span class="badge badge-js">JS</span></td><td>Floating gear ⚙, settings panel, error panel. IIFE, appends to DOM after DOMContentLoaded.</td></tr>
+    <tr><td><code>js/admin.js</code></td><td><span class="badge badge-js">JS</span></td><td>Admin auth (Supabase email/password), validate JSON, preview card, save draft, publish, library table.</td></tr>
+    <tr><td><code>data/games.json</code></td><td>JSON</td><td>Offline fallback: 15 complete game objects with definitions. IDs match seed.sql.</td></tr>
+    <tr><td><code>sql/schema.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>6 tables + RLS: games, game_versions, play_sessions, play_events, game_feedback, scores.</td></tr>
+    <tr><td><code>sql/seed.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>Inserts 15 games + versions with stable UUIDs. Updates current_version_id FK after all inserts.</td></tr>
+    <tr><td><code>sql/graphic_upgrade.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>Adds <code>emoji VARCHAR(10)</code> column to games. Sets emoji per game (15 slugs). Rebuilds <code>active_games_view</code> to expose the new column. Run after seed.sql.</td></tr>
+    <tr><td><code>sql/games_batch2.sql</code></td><td><span class="badge badge-sql">SQL</span></td><td>50 new games (status=draft, no wheel slot). Relaxes <code>wheel_slot NOT NULL</code> to allow drafts. 10 games per category, difficulty easy/medium/hard. Run after graphic_upgrade.sql.</td></tr>
+    <tr><td><code>admin/index.html</code></td><td><span class="badge badge-html">HTML</span></td><td>Admin authoring studio. Auth-gated. JSON editor → validate → draft → publish. Feedback Review table (ratings by game). Show Template button.</td></tr>
+  </tbody>
+</table>
+
+<!-- ── CSS Variables ────────────────────────────────────── -->
+<h2>CSS Variables (css/style.css)</h2>
+
+<h3>Palette</h3>
+<table>
+  <thead><tr><th>Variable</th><th>Value</th><th>Usage</th></tr></thead>
+  <tbody>
+    <tr><td><code>--ink</code></td><td><span class="swatch" style="background:#2b2d42"></span>#2b2d42</td><td>Primary text, borders, shadows</td></tr>
+    <tr><td><code>--paper</code></td><td><span class="swatch" style="background:#fffdf5;border-color:#ccc"></span>#fffdf5</td><td>Body background, gear button bg</td></tr>
+    <tr><td><code>--sun</code></td><td><span class="swatch" style="background:#ffd23f"></span>#ffd23f</td><td>Spin button, app title bg, selected states</td></tr>
+    <tr><td><code>--sky</code></td><td><span class="swatch" style="background:#4cc9f0"></span>#4cc9f0</td><td>Polka dot color in body background</td></tr>
+    <tr><td><code>--mint</code></td><td><span class="swatch" style="background:#6bd8a0"></span>#6bd8a0</td><td>Checked player chips</td></tr>
+    <tr><td><code>--pink</code></td><td><span class="swatch" style="background:#ff6b9d"></span>#ff6b9d</td><td>Available, not yet used</td></tr>
+    <tr><td><code>--grape</code></td><td><span class="swatch" style="background:#9b5de5"></span>#9b5de5</td><td>Available, not yet used</td></tr>
+    <tr><td><code>--coral</code></td><td><span class="swatch" style="background:#ff7b54"></span>#ff7b54</td><td>Available, not yet used</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Design Rules</h3>
+<table>
+  <thead><tr><th>Element</th><th>border-radius</th><th>box-shadow</th></tr></thead>
+  <tbody>
+    <tr><td>Cards (.game-card)</td><td><code>20px 10px 22px 12px / 12px 22px 10px 20px</code></td><td><code>5px 5px 0 var(--ink)</code></td></tr>
+    <tr><td>Buttons (.btn)</td><td><code>14px 24px 14px 24px</code></td><td><code>4px 4px 0 var(--ink)</code></td></tr>
+    <tr><td>Button :active</td><td>—</td><td><code>transform: translate(3px,3px); box-shadow: 1px 1px 0</code></td></tr>
+    <tr><td>Wheel wrapper</td><td><code>50%</code></td><td><code>5px 5px 0 var(--ink)</code></td></tr>
+    <tr><td>Floating gear</td><td><code>50%</code></td><td><code>4px 4px 0 var(--ink)</code></td></tr>
+  </tbody>
+</table>
+
+<!-- ── JS Key Functions ─────────────────────────────────── -->
+<h2>Key JS Functions</h2>
+
+<div class="section-card">
+  <h3>db.js — Data Layer</h3>
+  <table>
+    <thead><tr><th>Function</th><th>Returns</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>loadGames()</code></td><td>Game[] (async)</td><td>3-tier: Supabase → cache → games.json. Sets offline banner on fallback.</td></tr>
+      <tr><td><code>createSession(mode)</code></td><td>UUID | null</td><td>Inserts into play_sessions. Offline = null (graceful).</td></tr>
+      <tr><td><code>createPlayEvent(sessionId, gameId, versionId)</code></td><td>UUID | null</td><td>Inserts into play_events on spin.</td></tr>
+      <tr><td><code>updatePlayEvent(id, updates)</code></td><td>void</td><td>Updates outcome, players, winner on done/skip/end.</td></tr>
+      <tr><td><code>submitFeedback(…)</code></td><td>void</td><td>Inserts into game_feedback. Only called if selectedRating !== null.</td></tr>
+      <tr><td><code>saveScore(sessionId, eventId, player, points)</code></td><td>void</td><td>Inserts into scores. Only called if winner selected.</td></tr>
+      <tr><td><code>_logError(context, message)</code></td><td>void</td><td>Pushes to window._momentErrors[]. Calls window._onErrorLogged() if set.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-card">
+  <h3>session.js — State</h3>
+  <table>
+    <thead><tr><th>Function</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>initSession()</code></td><td>Creates session in sessionStorage if none exists. Players default: Athena, Felix, Ying, Jimmy.</td></tr>
+      <tr><td><code>getSession() / _write(s)</code></td><td>Read/write sessionStorage JSON blob.</td></tr>
+      <tr><td><code>setCurrentGame(game)</code></td><td>Stores game + selectedAt timestamp. game.html reads this.</td></tr>
+      <tr><td><code>clearCurrentGame()</code></td><td>Sets session.currentGame = null.</td></tr>
+      <tr><td><code>recordPlayEvent(eventId, gameId, category)</code></td><td>Appends to session.history[], increments roundNumber. Used for smart sequencing.</td></tr>
+      <tr><td><code>selectNextGame(games)</code></td><td>Weighted random. Avoids last 3 game IDs and last 2 categories. Returns a game object.</td></tr>
+      <tr><td><code>getWheelRotation() / setWheelRotation(deg)</code></td><td>Persists cumulative spin angle across spins.</td></tr>
+      <tr><td><code>getCachedGames() / setCachedGames(games)</code></td><td>localStorage cache with 24h TTL.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-card">
+  <h3>wheel.js — SVG Wheel</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>WEDGE_COUNT</code></td><td>15</td><td>Number of wheel wedges = number of games</td></tr>
+      <tr><td><code>WEDGE_DEG</code></td><td>24°</td><td>360 / 15</td></tr>
+      <tr><td><code>WHEEL_RADIUS</code></td><td>130</td><td>SVG units. Outer rim of wheel.</td></tr>
+      <tr><td><code>TEXT_RADIUS</code></td><td>90</td><td>SVG units. Where game name text is placed.</td></tr>
+      <tr><td><code>CENTER_X / CENTER_Y</code></td><td>150 / 150</td><td>Center of 300×300 viewBox</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px;font-size:13px;"><strong>buildWheel(games, svgEl)</strong> — creates <code>#wheel-group</code> with wedge paths + text labels, center cap circle, then appends a fixed pointer polygon (id=<code>wheel-pointer</code>) outside the group. Pointer: <code>points="136,10 164,10 150,28"</code> — all within the 150-unit clip circle.</p>
+  <p style="font-size:13px;"><strong>spinTo(gameIndex, currentRotation, svgEl, onComplete)</strong> — calculates final rotation so target wedge aligns to pointer (12-o'clock). Adds 5×360° for visual spin. Fires <code>onComplete(finalRotation)</code> on <code>transitionend</code>.</p>
+</div>
+
+<!-- ── Supabase Schema ───────────────────────────────────── -->
+<h2>Supabase Schema Summary</h2>
+<table>
+  <thead><tr><th>Table</th><th>Key Columns</th><th>RLS (anon)</th></tr></thead>
+  <tbody>
+    <tr><td><code>games</code></td><td>id (UUID), slug, title, short_label (≤15 chars), category, wheel_slot (0–14, nullable for drafts), emoji (added by graphic_upgrade.sql), current_version_id FK, status (active/draft/deprecated/archived)</td><td>SELECT active only</td></tr>
+    <tr><td><code>game_versions</code></td><td>id, game_id FK, version_number, definition (JSONB)</td><td>SELECT via active_games_view</td></tr>
+    <tr><td><code>play_sessions</code></td><td>id, mode, created_at</td><td>INSERT</td></tr>
+    <tr><td><code>play_events</code></td><td>id, session_id FK, game_id FK, outcome (played/skipped/completed), players[], winner, started_at, ended_at</td><td>INSERT + UPDATE own</td></tr>
+    <tr><td><code>game_feedback</code></td><td>id, play_event_id FK, game_id FK, rating (1/0/-1), notes</td><td>INSERT only (SELECT requires auth)</td></tr>
+    <tr><td><code>scores</code></td><td>id, session_id FK, play_event_id FK, player_name, points</td><td>INSERT + SELECT</td></tr>
+  </tbody>
+</table>
+<p style="font-size:13px;"><code>games.current_version_id → game_versions.id</code> is a DEFERRABLE INITIALLY DEFERRED circular FK to allow insert ordering in seed.sql.</p>
+
+<h3>active_games_view — what it is and why it exists</h3>
+<div class="section-card">
+  <p style="font-size:14px;margin-bottom:10px;"><code>active_games_view</code> is a PostgreSQL <strong>VIEW</strong> (not a table). It is the <em>only</em> thing <code>loadGames()</code> in db.js queries. It combines two tables in one read:</p>
+  <table>
+    <thead><tr><th>Source</th><th>Columns exposed</th></tr></thead>
+    <tbody>
+      <tr><td><code>games g</code></td><td>id, slug, title, short_label, category, wheel_slot, status, emoji, current_version_id, updated_at</td></tr>
+      <tr><td><code>game_versions gv</code> (LEFT JOIN on <code>current_version_id</code>)</td><td>definition (JSONB), version_number, schema_version</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:13px;margin-top:10px;"><strong>Filter:</strong> <code>WHERE g.status = 'active'</code> — draft, deprecated, and archived games are completely invisible to the app. The 50 batch-2 games start as draft and will not appear on the wheel until an admin sets their status to active and assigns a wheel slot.</p>
+  <p style="font-size:13px;margin-top:8px;"><strong>Why a view and not a direct table query?</strong> The app needs the game's JSONB definition (instructions, scoring, etc.) alongside the game metadata in a single query. Without the view, every page load would need a JOIN — the view encapsulates that JOIN and lets <code>loadGames()</code> stay a simple <code>.select('*')</code>.</p>
+  <p style="font-size:13px;margin-top:8px;"><strong>RLS note:</strong> The anon role's SELECT policy on <code>games</code> (<code>WHERE status = 'active'</code>) already restricts what the view can return. The view adds no extra security — it only simplifies the query shape.</p>
+  <p style="font-size:13px;margin-top:8px;"><strong>After graphic_upgrade.sql:</strong> The view is rebuilt to also expose <code>g.emoji</code>. The wheel's label renderer reads <code>game.emoji</code> first (from the view), falling back to the <code>GAME_EMOJI_FALLBACK</code> dict in wheel.js if the column is null (offline / pre-migration).</p>
+</div>
+
+<!-- ── Error / Settings UI ──────────────────────────────── -->
+<h2>Error & Settings UI (ui.js)</h2>
+<div class="section-card">
+  <p style="font-size:14px;">Appended to DOM by IIFE after DOMContentLoaded. Elements: <strong>floating gear button</strong> (fixed bottom-right), <strong>settings panel</strong> (above gear, hidden by default), <strong>error panel</strong> (inside .app-container, bottom of page).</p>
+  <p style="font-size:13px;margin-top:8px;"><strong>Persistence:</strong> <code>localStorage.getItem('moment_show_errors')</code> = '1' | '0'<br>
+  <strong>Error hook:</strong> <code>window._onErrorLogged</code> — set by ui.js, called by db.js <code>_logError</code><br>
+  <strong>Error source:</strong> <code>window._momentErrors[]</code> — populated by db.js, read by ui.js</p>
+</div>
+
+</div>
+</body>
+</html>

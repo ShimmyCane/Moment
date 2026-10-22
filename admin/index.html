@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moment Admin — Authoring Studio</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Patrick+Hand&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="admin-container">
+
+    <div class="admin-header">
+      <h1>Moment Admin</h1>
+      <p>Authoring Studio — create and publish games</p>
+    </div>
+
+    <!-- Login -->
+    <div id="loginSection" class="admin-card hidden">
+      <h2>Sign In</h2>
+      <form id="loginForm" class="login-form">
+        <input id="emailInput" class="form-input" type="email" placeholder="Email" required autocomplete="email">
+        <input id="passInput"  class="form-input" type="password" placeholder="Password" required autocomplete="current-password">
+        <button type="submit" class="btn btn-primary" style="margin-top: 4px;">Sign In</button>
+        <div id="loginError" style="color:#DC2626;font-size:14px;"></div>
+      </form>
+    </div>
+
+    <!-- Studio -->
+    <div id="studioSection" class="hidden">
+
+      <!-- JSON Editor -->
+      <div class="admin-card">
+        <h2>New / Edit Game</h2>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;font-weight:400;">
+          Generate a game definition with an LLM, paste the JSON below, validate, then save as draft and publish.
+        </p>
+        <textarea
+          id="jsonEditor"
+          class="admin-textarea"
+          placeholder='{
+  "schema_version": "1.0",
+  "id": "my-game-slug",
+  "title": "My Game",
+  "short_label": "My Game",
+  "category": "observation",
+  "template": "observation_game",
+  "duration_min": 2,
+  "duration_max": 5,
+  "players_min": 2,
+  "players_max": 6,
+  "energy": "calm",
+  "materials": [],
+  "contexts": ["home"],
+  "languages": ["en"],
+  "educational_topics": [],
+  "interaction": "competitive",
+  "instructions": [
+    "Step one.",
+    "Step two.",
+    "Step three."
+  ],
+  "variants": [],
+  "scoring": { "type": "winner_takes_one", "description": "First correct guess gets +1." }
+}'></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button id="showTemplateBtn" class="btn btn-ghost"   style="flex:1;min-width:120px;">Show Template</button>
+          <button id="validateBtn"     class="btn btn-primary" style="flex:1;min-width:120px;">Validate</button>
+          <button id="saveDraftBtn"    class="btn btn-ghost"   style="flex:1;min-width:120px;" disabled>Save Draft</button>
+          <button id="publishBtn"      class="btn btn-ghost"   style="flex:1;min-width:120px;" disabled>Publish</button>
+        </div>
+
+        <div id="validationResult" class="validation-result"></div>
+      </div>
+
+      <!-- Preview -->
+      <div id="previewWrap" class="hidden">
+        <div class="section-label" style="margin-bottom:8px;">Preview</div>
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Game Library -->
+      <div class="admin-card">
+        <h2>Game Library</h2>
+        <div style="overflow-x:auto;">
+          <table class="game-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Slot</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="libraryBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Feedback Review -->
+      <div class="admin-card">
+        <h2>Feedback Review</h2>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;font-weight:400;">
+          All feedback grouped by game. Click "Load" to pull the current definition into the editor above.
+        </p>
+        <div id="feedbackBody">
+          <div style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Back link -->
+      <a href="../index.html" style="font-size:13px;color:var(--text-muted);">← Back to app</a>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

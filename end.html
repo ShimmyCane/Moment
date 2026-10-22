@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Moment">
+  <title>Moment — How did it go?</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Patrick+Hand&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Game name -->
+    <header class="app-header" style="padding-top: 24px;">
+      <div style="font-size: 14px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px;">
+        Round complete
+      </div>
+      <div id="endGameTitle" class="app-title" style="font-size: 22px; transform: rotate(-1deg);"></div>
+    </header>
+
+    <!-- Rating -->
+    <div class="game-card">
+      <div class="section-label">How did it go?</div>
+      <div class="rating-row">
+        <button class="rating-btn" data-rating="1"  title="Loved it">👍</button>
+        <button class="rating-btn" data-rating="0"  title="It was okay">😐</button>
+        <button class="rating-btn" data-rating="-1" title="Didn't work">👎</button>
+      </div>
+    </div>
+
+    <!-- Players -->
+    <div class="game-card">
+      <div class="section-label">Who played?</div>
+      <div id="playerGrid" class="player-grid"></div>
+    </div>
+
+    <!-- Winner -->
+    <div class="game-card">
+      <div class="section-label">Winner (optional)</div>
+      <div id="winnerGrid" class="winner-grid"></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="game-card">
+      <div class="section-label">Notes (optional)</div>
+      <textarea
+        id="notesInput"
+        class="notes-input"
+        placeholder="What worked? What would you change next time?"
+      ></textarea>
+    </div>
+
+    <!-- Session scores -->
+    <div id="scoresWrap" class="hidden" style="width: 100%;">
+      <div class="section-label">Session scores</div>
+      <div id="scoresStrip" class="scores-strip"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="btn-row" style="max-width: 360px; width: 100%;">
+      <button id="saveSpinBtn" class="btn btn-primary">Save &amp; Spin</button>
+      <button id="skipSaveBtn" class="btn btn-ghost">Just Spin</button>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/end.js"></script>
+</body>
+</html>

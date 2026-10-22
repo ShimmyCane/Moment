@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Moment">
+  <title>Moment — Family Play</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Patrick+Hand&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Game reveal overlay (shown after spin, before navigation) -->
+  <div id="gameReveal" class="game-reveal hidden" role="dialog" aria-modal="true">
+    <div class="game-reveal-card">
+      <div id="revealEmoji" class="reveal-emoji"></div>
+      <div id="revealTitle" class="reveal-title"></div>
+      <div id="revealCategory" class="reveal-category"></div>
+      <div class="reveal-hint">Tap to start →</div>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- Offline notice -->
+    <div id="offlineBanner" class="offline-banner hidden">
+      <span>Playing offline — using cached games</span>
+      <button onclick="this.parentElement.classList.add('hidden')">×</button>
+    </div>
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-title">Moment</div>
+      <div class="app-subtitle">Put the phone down and play together</div>
+    </header>
+
+    <!-- Session scores (visible after first game) -->
+    <div id="scoresWrap" class="scores-strip hidden"></div>
+    <button id="resetScoresBtn" class="reset-scores-btn hidden">↺ Reset Scores</button>
+
+    <!-- Wheel -->
+    <div class="wheel-container">
+      <div class="wheel-svg-wrapper">
+        <svg id="wheelSvg" viewBox="0 0 300 300"></svg>
+      </div>
+    </div>
+
+    <!-- Spin button -->
+    <button class="spin-btn" id="spinBtn" disabled>Loading…</button>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/wheel.js"></script>
+  <script src="js/ui.js"></script>
+  <script>
+    var _games   = [];
+    var _spinning = false;
+
+    // ── Playlist filtering ──────────────────────────────────
+
+    window._playlistData = { topIds: [], felixIds: [], mixIds: [] };
+
+    async function loadPlaylistData(games) {
+      // Mix: stable random 8 for this session
+      var shuffled = games.slice().sort(function() { return Math.random() - 0.5; });
+      window._playlistData.mixIds = shuffled.slice(0, 8).map(function(g) { return g.id; });
+
+      var sb = getClient();
+      if (!sb) return;
+      try {
+        var res = await sb.from('game_feedback').select('game_id, rating').neq('rating', -1);
+        if (res.data && res.data.length > 0) {
+          var totals = {};
+          res.data.forEach(function(r) {
+            if (!totals[r.game_id]) totals[r.game_id] = { sum: 0, n: 0 };
+            totals[r.game_id].sum += r.rating;
+            totals[r.game_id].n  += 1;
+          });
+          window._playlistData.topIds = Object.keys(totals)
+            .sort(function(a, b) {
+              return (totals[b].sum / totals[b].n) - (totals[a].sum / totals[a].n);
+            }).slice(0, 8);
+        }
+      } catch(_) {}
+      try {
+        var res2 = await sb.from('play_events').select('game_id').eq('winner', 'Felix');
+        if (res2.data && res2.data.length > 0) {
+          var counts = {};
+          res2.data.forEach(function(e) {
+            counts[e.game_id] = (counts[e.game_id] || 0) + 1;
+          });
+          window._playlistData.felixIds = Object.keys(counts)
+            .sort(function(a, b) { return counts[b] - counts[a]; })
+            .slice(0, 8);
+        }
+      } catch(_) {}
+    }
+
+    function _filterByPlaylist(games) {
+      var pl = localStorage.getItem('moment_playlist') || 'all';
+      var filtered;
+
+      if (pl === 'new') {
+        var session = getSession();
+        var recentIds = new Set((session.history || []).map(function(h) { return h.gameId; }));
+        filtered = games.filter(function(g) { return !recentIds.has(g.id); });
+        return filtered.length >= 3 ? filtered : games;
+      }
+      if (pl === 'top' && window._playlistData.topIds.length > 0) {
+        var topSet = new Set(window._playlistData.topIds);
+        filtered = games.filter(function(g) { return topSet.has(g.id); });
+        return filtered.length >= 3 ? filtered : games;
+      }
+      if (pl === 'felix' && window._playlistData.felixIds.length > 0) {
+        var felixSet = new Set(window._playlistData.felixIds);
+        filtered = games.filter(function(g) { return felixSet.has(g.id); });
+        return filtered.length >= 3 ? filtered : games;
+      }
+      if (pl === 'mix' && window._playlistData.mixIds.length > 0) {
+        var mixSet = new Set(window._playlistData.mixIds);
+        filtered = games.filter(function(g) { return mixSet.has(g.id); });
+        return filtered.length >= 3 ? filtered : games;
+      }
+      return games;
+    }
+
+    // ── Scores display ──────────────────────────────────────
+
+    function renderScores() {
+      var session = getSession();
+      if (!session) return;
+      var wrap   = document.getElementById('scoresWrap');
+      var resetBtn = document.getElementById('resetScoresBtn');
+      var scores = session.scores || {};
+      var active = Object.entries(scores).filter(function(pair) {
+        return session.players.includes(pair[0]) && pair[1] > 0;
+      });
+      if (active.length === 0) {
+        wrap.classList.add('hidden');
+        resetBtn.classList.add('hidden');
+        return;
+      }
+      wrap.classList.remove('hidden');
+      resetBtn.classList.remove('hidden');
+      wrap.innerHTML = '';
+      active.sort(function(a, b) { return b[1] - a[1]; }).forEach(function(pair) {
+        var chip = document.createElement('div');
+        chip.className = 'score-chip';
+        chip.innerHTML = '<span class="score-chip-name">' + pair[0] + '</span>' +
+                         '<span class="score-chip-pts">' + pair[1] + '</span>';
+        wrap.appendChild(chip);
+      });
+    }
+
+    // ── Game reveal overlay ──────────────────────────────────
+
+    function showGameReveal(game) {
+      var catLabels = {
+        observation: 'Observation', imagination: 'Imagination',
+        learning: 'Learning', conversation: 'Conversation',
+        quick_challenge: 'Quick Challenge'
+      };
+      document.getElementById('revealEmoji').textContent   = game.emoji || '🎮';
+      document.getElementById('revealTitle').textContent   = game.title;
+      document.getElementById('revealCategory').textContent = catLabels[game.category] || game.category;
+
+      var reveal = document.getElementById('gameReveal');
+      reveal.classList.remove('hidden');
+
+      var navTimer = setTimeout(function() { window.location.href = 'game.html'; }, 2200);
+
+      reveal.addEventListener('click', function() {
+        clearTimeout(navTimer);
+        window.location.href = 'game.html';
+      }, { once: true });
+    }
+
+    // ── Init ────────────────────────────────────────────────
+
+    async function init() {
+      initSession();
+      renderScores();
+
+      var spinBtn  = document.getElementById('spinBtn');
+      var resetBtn = document.getElementById('resetScoresBtn');
+
+      resetBtn.addEventListener('click', function() {
+        resetSessionScores();
+        renderScores();
+      });
+
+      _games = await loadGames();
+
+      if (_games.length === 0) {
+        spinBtn.textContent = 'No games available';
+        return;
+      }
+
+      // Load playlist data (non-blocking, runs in background)
+      loadPlaylistData(_games);
+
+      var sbId = await createSession('family_mix');
+      if (sbId) {
+        var s = getSession();
+        if (s.roundNumber === 0) {
+          s.sessionId = sbId;
+          sessionStorage.setItem('moment_session', JSON.stringify(s));
+        }
+      }
+
+      buildWheel(_games, document.getElementById('wheelSvg'));
+
+      var pl = localStorage.getItem('moment_playlist') || 'all';
+      var labels = { all:'Spin!', new:'Spin New!', top:'Spin Top!', felix:"Spin Felix's!", mix:'Spin Mix!' };
+      spinBtn.disabled = false;
+      spinBtn.textContent = labels[pl] || 'Spin!';
+
+      spinBtn.addEventListener('click', onSpin);
+
+      // Update spin label when playlist changes
+      window._onPlaylistChange = function(id) {
+        if (!_spinning) spinBtn.textContent = labels[id] || 'Spin!';
+      };
+    }
+
+    async function onSpin() {
+      if (_spinning) return;
+      _spinning = true;
+
+      var spinBtn = document.getElementById('spinBtn');
+      spinBtn.disabled = true;
+      spinBtn.textContent = 'Spinning…';
+
+      var pool   = _filterByPlaylist(_games);
+      var game   = selectNextGame(pool);
+      var svgEl  = document.getElementById('wheelSvg');
+      var curRot = getWheelRotation();
+
+      spinTo(game.wheel_slot, curRot, svgEl, async function(finalRot) {
+        setWheelRotation(finalRot);
+        setCurrentGame(game);
+
+        var session = getSession();
+        var eventId = await createPlayEvent(
+          session.sessionId,
+          game.id,
+          game.current_version_id
+        );
+        if (eventId) {
+          var s = getSession();
+          if (s.currentGame) {
+            s.currentGame.playEventId = eventId;
+            sessionStorage.setItem('moment_session', JSON.stringify(s));
+          }
+        }
+
+        showGameReveal(game);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

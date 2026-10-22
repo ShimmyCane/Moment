@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Moment">
+  <title>Moment — Game</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Patrick+Hand&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Game card -->
+    <div class="game-card" style="margin-top: 20px;">
+      <div class="game-card-header">
+        <span id="categoryBadge" class="category-badge"></span>
+        <h1 id="gameTitle" class="game-title"></h1>
+        <div id="gameMeta" class="game-meta"></div>
+      </div>
+
+      <ol id="instructionsList" class="instructions-list"></ol>
+
+      <div id="variantsSection" class="variants-section hidden">
+        <div class="variants-label">Variants</div>
+        <ul id="variantsList" class="variants-list"></ul>
+      </div>
+    </div>
+
+    <!-- Primary actions -->
+    <div class="btn-row" style="max-width: 360px; width: 100%;">
+      <button id="doneBtn" class="btn btn-primary">Next Game</button>
+      <button id="feedbackBtn" class="btn btn-ghost">Feedback</button>
+    </div>
+
+    <!-- Skip -->
+    <button id="skipBtn" class="btn btn-ghost" style="max-width:360px;width:100%;">Skip</button>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
