@@ -31,8 +31,20 @@
       </div>
     </div>
 
-    <!-- Primary actions -->
-    <div class="btn-row" style="max-width: 360px; width: 100%;">
+    <!-- Seed card (shown only for games with a seed_cards bank) -->
+    <div id="seedSection" class="seed-section hidden">
+      <div class="seed-label" id="seedLabel">Your prompt:</div>
+      <div class="seed-card" id="seedCard">
+        <div class="seed-prompt" id="seedPrompt"></div>
+      </div>
+      <div class="btn-row" style="max-width: 360px; width: 100%;">
+        <button id="changeCardBtn" class="btn btn-ghost">New Card</button>
+        <button id="endGameBtn" class="btn btn-primary">End Game</button>
+      </div>
+    </div>
+
+    <!-- Primary actions (hidden when seed section is visible) -->
+    <div id="mainActions" class="btn-row" style="max-width: 360px; width: 100%;">
       <button id="doneBtn" class="btn btn-primary">Next Game</button>
       <button id="feedbackBtn" class="btn btn-ghost">Feedback</button>
     </div>

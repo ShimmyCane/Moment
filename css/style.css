@@ -484,15 +484,15 @@ body {
 
 .floating-gear {
   position: fixed;
-  bottom: calc(20px + env(safe-area-inset-bottom));
-  right: 20px;
-  width: 54px;
-  height: 54px;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--paper);
   border: var(--bold-border);
   box-shadow: 4px 4px 0 var(--ink);
-  font-size: 24px;
+  font-size: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -507,28 +507,124 @@ body {
   box-shadow: 1px 1px 0 var(--ink);
 }
 
-/* ── Settings Panel ────────────────────────────────────────── */
+/* ── Settings Overlay ──────────────────────────────────────── */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 45, 66, 0.5);
+  z-index: 98;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* ── Settings Panel (bottom sheet) ────────────────────────── */
 
 .settings-panel {
   position: fixed;
-  bottom: calc(84px + env(safe-area-inset-bottom));
-  right: 16px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 88dvh;
   background: var(--paper);
   border: var(--bold-border);
-  border-radius: 18px 18px 8px 18px;
-  box-shadow: 5px 5px 0 var(--ink);
-  padding: 16px 18px;
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -5px 0 var(--ink);
   z-index: 99;
-  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
-.settings-title {
-  font-size: 12px;
+
+.settings-drag-handle {
+  width: 40px;
+  height: 5px;
+  background: #d1d5db;
+  border-radius: 3px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px 10px;
+  border-bottom: 2px dashed #e5e7eb;
+  flex-shrink: 0;
+}
+.settings-header-title {
+  font-size: 14px;
   font-weight: 800;
-  margin-bottom: 12px;
   color: var(--ink);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+.settings-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: var(--bold-border);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.settings-close-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 2px dashed #e5e7eb;
+  flex-shrink: 0;
+}
+.settings-tab {
+  padding: 5px 14px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  border: 2px solid var(--ink);
+  border-radius: 10px 16px 10px 16px;
+  background: var(--bg-card);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: background 0.1s, transform 0.08s;
+}
+.settings-tab.active {
+  background: var(--sun);
+}
+.settings-tab:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-section {
+  display: none;
+  padding: 14px 16px;
+}
+.settings-section.active {
+  display: block;
+}
+
 .settings-row {
   display: flex;
   align-items: center;
@@ -543,6 +639,196 @@ body {
   accent-color: var(--ink);
   cursor: pointer;
   user-select: none;
+}
+
+.settings-divider {
+  margin: 12px 0;
+  border-top: 2px dashed #e5e7eb;
+}
+
+.settings-section-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.settings-hint {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.settings-error {
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.settings-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ── Feedback cards ────────────────────────────────────────── */
+
+.feedback-list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fb-card {
+  background: var(--bg-card);
+  border: var(--bold-border);
+  border-radius: 14px 20px 14px 20px;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 10px 12px;
+}
+.fb-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fb-emoji {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.fb-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fb-counts {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.fb-no-data {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+.fb-notes {
+  margin-top: 6px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tweak-btn {
+  padding: 4px 10px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  border: 2px solid var(--ink);
+  border-radius: 8px 12px 8px 12px;
+  background: var(--paper);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+  flex-shrink: 0;
+}
+.tweak-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+/* ── Tweak editor ──────────────────────────────────────────── */
+
+.tweak-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.tweak-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  flex: 1;
+}
+
+/* ── Add Game tab ──────────────────────────────────────────── */
+
+.template-box-wrap {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.json-template-box {
+  width: 100%;
+  min-height: 200px;
+  max-height: 240px;
+  padding: 10px 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #4c1d95;
+  background: #faf5ff;
+  border: 2px dashed #c4b5fd;
+  border-radius: 12px;
+  resize: none;
+  overflow-y: auto;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.settings-json-editor {
+  width: 100%;
+  min-height: 160px;
+  padding: 10px 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  border: var(--bold-border);
+  border-radius: 12px;
+  resize: vertical;
+  background: #fafafa;
+  color: var(--ink);
+  user-select: text;
+  -webkit-user-select: text;
+}
+.settings-json-editor:focus { outline: none; border-color: var(--sky); }
+
+.copy-overlay-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--sun);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+.copy-overlay-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.validation-area {
+  min-height: 20px;
+  margin-top: 8px;
 }
 
 /* ── Playlist Buttons ──────────────────────────────────────── */
@@ -874,6 +1160,169 @@ body {
   line-height: 16px;
   text-align: center;
   pointer-events: none;
+}
+
+/* ── Feedback entries (within fb-card) ────────────────────── */
+
+.fb-new-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.fb-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 5px;
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fb-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.fb-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.fb-entry-rating {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.fb-entry-notes {
+  flex: 1;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-entry-empty {
+  opacity: 0.4;
+}
+
+.fb-entry-new {
+  font-size: 8px;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.fb-delete-btn {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: inherit;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #dc2626;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.08s;
+}
+.fb-delete-btn:active {
+  transform: translate(1px, 1px);
+}
+
+.fb-mark-read-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 4px 10px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--paper);
+  border: 1.5px dashed var(--text-muted);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.fb-mark-read-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+/* ── Seed Card ─────────────────────────────────────────────── */
+
+.seed-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.seed-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.seed-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--sun);
+  border: var(--bold-border);
+  border-radius: 20px 10px 22px 12px / 12px 22px 10px 20px;
+  box-shadow: 5px 5px 0 var(--ink);
+  padding: 36px 28px;
+  text-align: center;
+  transform-origin: center;
+  perspective: 600px;
+}
+
+.seed-card.flipping {
+  animation: seedFlip 0.44s ease;
+}
+
+@keyframes seedFlip {
+  0%   { transform: scaleX(1); }
+  40%  { transform: scaleX(0); }
+  60%  { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+.seed-prompt {
+  font-family: 'Quicksand', sans-serif;
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.25;
 }
 
 /* ── Utility ───────────────────────────────────────────────── */

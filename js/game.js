@@ -64,6 +64,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── Seed Card ────────────────────────────────────────────────
+  const seedCards = def.seed_cards;
+  if (Array.isArray(seedCards) && seedCards.length > 0) {
+    const seedSection  = document.getElementById('seedSection');
+    const seedLabelEl  = document.getElementById('seedLabel');
+    const seedCardEl   = document.getElementById('seedCard');
+    const seedPromptEl = document.getElementById('seedPrompt');
+    const mainActions  = document.getElementById('mainActions');
+
+    // Show seed section, hide normal Next/Feedback buttons
+    seedSection.classList.remove('hidden');
+    mainActions.classList.add('hidden');
+
+    if (def.seed_label) seedLabelEl.textContent = def.seed_label;
+
+    let usedIndices = [];
+
+    function drawCard(animate) {
+      if (usedIndices.length >= seedCards.length) usedIndices = [];
+      let idx, tries = 0;
+      do {
+        idx = Math.floor(Math.random() * seedCards.length);
+        tries++;
+      } while (usedIndices.includes(idx) && tries < seedCards.length * 2);
+      usedIndices.push(idx);
+
+      if (animate && seedCardEl) {
+        seedCardEl.classList.add('flipping');
+        setTimeout(() => {
+          seedPromptEl.textContent = seedCards[idx];
+          seedCardEl.classList.remove('flipping');
+        }, 220);
+      } else {
+        seedPromptEl.textContent = seedCards[idx];
+      }
+    }
+
+    drawCard(false);
+
+    document.getElementById('changeCardBtn').addEventListener('click', () => drawCard(true));
+
+    document.getElementById('endGameBtn').addEventListener('click', () => {
+      window.location.href = 'end.html';
+    });
+  }
+
   // Next Game — marks completed, records history, goes to wheel
   document.getElementById('doneBtn').addEventListener('click', async () => {
     const s = getSession();

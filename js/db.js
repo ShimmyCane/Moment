@@ -148,41 +148,56 @@ async function createPlayEvent(sessionId, gameId, versionId) {
 
 async function updatePlayEvent(playEventId, updates) {
   const sb = getClient();
-  if (!sb || !playEventId) return;
+  if (!sb)          { _logError('updatePlayEvent', 'No Supabase client'); return false; }
+  if (!playEventId) { _logError('updatePlayEvent', 'playEventId is null — play event was never created'); return false; }
   try {
     const { error } = await Promise.race([
       sb.from('play_events').update(updates).eq('id', playEventId),
       _timeout(SUPABASE_TIMEOUT_MS, 'updatePlayEvent')
     ]);
-    if (error) _logError('updatePlayEvent', error.message);
+    if (error) { _logError('updatePlayEvent', `${error.code || 'error'}: ${error.message}`); return false; }
+    return true;
   } catch (e) {
-    _logError('updatePlayEvent', e.message);
+    _logError('updatePlayEvent', e.message || 'Unknown error');
+    return false;
   }
 }
 
 async function submitFeedback(playEventId, gameId, versionId, rating, notes) {
   const sb = getClient();
-  if (!sb || !playEventId) return;
+  if (!sb)          { _logError('submitFeedback', 'No Supabase client'); return false; }
+  if (!playEventId) { _logError('submitFeedback', 'playEventId is null — cannot link feedback to a play event'); return false; }
+  if (!gameId)      { _logError('submitFeedback', 'gameId is null'); return false; }
+  if (rating === undefined || rating === null) { _logError('submitFeedback', 'rating is null — skipping insert'); return false; }
   try {
+    const row = {
+      play_event_id:   playEventId,
+      game_id:         gameId,
+      rating,
+      notes:           notes || null
+    };
+    // game_version_id is nullable in schema — include only if present
+    if (versionId) row.game_version_id = versionId;
+
     const { error } = await Promise.race([
-      sb.from('game_feedback').insert({
-        play_event_id:   playEventId,
-        game_id:         gameId,
-        game_version_id: versionId,
-        rating,
-        notes: notes || null
-      }),
+      sb.from('game_feedback').insert(row),
       _timeout(SUPABASE_TIMEOUT_MS, 'submitFeedback')
     ]);
-    if (error) _logError('submitFeedback', error.message);
+    if (error) {
+      _logError('submitFeedback', `${error.code || 'error'}: ${error.message} | payload: rating=${rating}, notes=${JSON.stringify(notes)}, versionId=${versionId}`);
+      return false;
+    }
+    return true;
   } catch (e) {
-    _logError('submitFeedback', e.message);
+    _logError('submitFeedback', e.message || 'Unknown error');
+    return false;
   }
 }
 
 async function saveScore(sessionId, playEventId, playerName, points) {
   const sb = getClient();
-  if (!sb || !sessionId) return;
+  if (!sb)        { _logError('saveScore', 'No Supabase client'); return false; }
+  if (!sessionId) { _logError('saveScore', 'sessionId is null'); return false; }
   try {
     const { error } = await Promise.race([
       sb.from('scores').insert({
@@ -193,8 +208,10 @@ async function saveScore(sessionId, playEventId, playerName, points) {
       }),
       _timeout(SUPABASE_TIMEOUT_MS, 'saveScore')
     ]);
-    if (error) _logError('saveScore', error.message);
+    if (error) { _logError('saveScore', `${error.code || 'error'}: ${error.message}`); return false; }
+    return true;
   } catch (e) {
-    _logError('saveScore', e.message);
+    _logError('saveScore', e.message || 'Unknown error');
+    return false;
   }
 }

@@ -216,7 +216,8 @@
         }
       }
 
-      buildWheel(_games, document.getElementById('wheelSvg'));
+      var svgEl = document.getElementById('wheelSvg');
+      buildWheel(_filterByPlaylist(_games), svgEl);
 
       var pl = localStorage.getItem('moment_playlist') || 'all';
       var labels = { all:'Spin!', new:'Spin New!', top:'Spin Top!', felix:"Spin Felix's!", mix:'Spin Mix!' };
@@ -225,9 +226,12 @@
 
       spinBtn.addEventListener('click', onSpin);
 
-      // Update spin label when playlist changes
+      // Rebuild wheel and update label when playlist changes
       window._onPlaylistChange = function(id) {
-        if (!_spinning) spinBtn.textContent = labels[id] || 'Spin!';
+        if (_spinning) return;
+        setWheelRotation(0);
+        buildWheel(_filterByPlaylist(_games), svgEl);
+        spinBtn.textContent = labels[id] || 'Spin!';
       };
     }
 
@@ -239,12 +243,12 @@
       spinBtn.disabled = true;
       spinBtn.textContent = 'Spinning…';
 
-      var pool   = _filterByPlaylist(_games);
-      var game   = selectNextGame(pool);
-      var svgEl  = document.getElementById('wheelSvg');
-      var curRot = getWheelRotation();
+      var svgEl      = document.getElementById('wheelSvg');
+      var wheelGames = svgEl._games || _games;
+      var game       = selectNextGame(wheelGames.length >= 2 ? wheelGames : _games);
+      var curRot     = getWheelRotation();
 
-      spinTo(game.wheel_slot, curRot, svgEl, async function(finalRot) {
+      spinTo(game.id, curRot, svgEl, async function(finalRot) {
         setWheelRotation(finalRot);
         setCurrentGame(game);
 
