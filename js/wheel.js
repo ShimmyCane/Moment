@@ -6,7 +6,7 @@ const CENTER_X        = 150;
 const CENTER_Y        = 150;
 const WHEEL_RADIUS    = 130;
 const TEXT_RADIUS     = 90;
-const MAX_WHEEL_GAMES = 10;
+const MAX_WHEEL_GAMES = 7// force keep as odd integer, 5, 7, 9;
 
 // Emoji fallback for offline play (before graphic_upgrade.sql is run)
 const GAME_EMOJI_FALLBACK = {
