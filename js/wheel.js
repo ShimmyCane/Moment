@@ -2,8 +2,8 @@
 // Angle convention: 0° = 12-o'clock, clockwise positive.
 // Wheel SVG is 300×300, center (150,150), radius 130.
 
-const WEDGE_COUNT  = 15;
-const WEDGE_DEG    = 360 / WEDGE_COUNT;    // 24°
+const WEDGE_COUNT  = 6;
+const WEDGE_DEG    = 360 / WEDGE_COUNT;    // 60°
 const CENTER_X     = 150;
 const CENTER_Y     = 150;
 const WHEEL_RADIUS = 130;
