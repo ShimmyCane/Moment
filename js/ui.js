@@ -171,6 +171,59 @@
     _panel.classList.remove('hidden');
     _overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    _renderAccount();
+  }
+
+  // ── Account (sign-in) ─────────────────────────────────────────
+  // supabase-js keeps the session in localStorage, so a sign-in
+  // persists across reloads until the user signs out.
+
+  async function _renderAccount() {
+    var box = document.getElementById('accountBox');
+    if (!box) return;
+
+    var sb = (typeof getClient === 'function') ? getClient() : null;
+    if (!sb) {
+      box.innerHTML = '<p class="settings-hint">Supabase not connected.</p>';
+      return;
+    }
+
+    var res = await sb.auth.getSession();
+    var session = res.data && res.data.session;
+
+    if (session) {
+      box.innerHTML =
+        '<p class="settings-hint">Signed in as ' + _esc(session.user.email) + '.</p>' +
+        '<button id="accountSignOutBtn" class="pl-btn">Sign out</button>';
+      document.getElementById('accountSignOutBtn').addEventListener('click', _signOut);
+    } else {
+      box.innerHTML =
+        '<form id="accountForm" class="account-form">' +
+          '<input id="accountEmail" class="form-input" type="email" placeholder="Email" required autocomplete="email">' +
+          '<input id="accountPass" class="form-input" type="password" placeholder="Password" required autocomplete="current-password">' +
+          '<button type="submit" class="pl-btn">Sign in</button>' +
+          '<div id="accountError" class="settings-error"></div>' +
+        '</form>';
+      document.getElementById('accountForm').addEventListener('submit', _signIn);
+    }
+  }
+
+  async function _signIn(e) {
+    e.preventDefault();
+    var sb = getClient();
+    var errEl = document.getElementById('accountError');
+    var email = document.getElementById('accountEmail').value.trim();
+    var pass  = document.getElementById('accountPass').value;
+
+    var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+    if (res.error) { errEl.textContent = res.error.message; return; }
+    _renderAccount();
+  }
+
+  async function _signOut() {
+    var sb = getClient();
+    await sb.auth.signOut();
+    _renderAccount();
   }
 
   function _closePanel() {
@@ -226,6 +279,10 @@
               '<input type="checkbox" id="showErrorsToggle">' +
               '<span>Show errors</span>' +
             '</label>';
+
+    html += '<div class="settings-divider"></div>';
+    html += '<div class="settings-section-label">Account</div>';
+    html += '<div id="accountBox"></div>';
 
     html += '</div>'; // section-general
 

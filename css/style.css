@@ -703,6 +703,12 @@ body {
   margin-top: 10px;
 }
 
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* ── Feedback cards ────────────────────────────────────────── */
 
 .feedback-list-wrap {
