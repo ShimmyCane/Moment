@@ -14,7 +14,8 @@ window.MOMENT_CHANGELOG = [
     changes: [
       'Flick wheel: drag the wheel and let go. Turn it on in Settings › General › Wheel control. The Spin button stays the default.',
       'Pegs around the rim click as each wedge passes the pointer, and the pointer flicks with them.',
-      'Flick speed is capped, so a hard flick is needed. The stop takes 1.5 seconds.'
+      'Flick speed is capped, so a hard flick is needed. The stop takes 1.5 seconds.',
+      'Screen lock: no pinch or double-tap zoom, and no iOS edge swipe-back while playing.'
     ]
   },
   {
