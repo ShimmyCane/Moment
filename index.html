@@ -59,6 +59,7 @@
   <script src="js/db.js"></script>
   <script src="js/session.js"></script>
   <script src="js/wheel.js"></script>
+  <script src="js/version.js"></script>
   <script src="js/ui.js"></script>
   <script>
     var _games   = [];
@@ -105,7 +106,7 @@
     }
 
     function _filterByPlaylist(games) {
-      var pl = localStorage.getItem('moment_playlist') || 'all';
+      var pl = getPlaylist();
       var filtered;
 
       if (pl === 'new') {
@@ -219,8 +220,8 @@
       var svgEl = document.getElementById('wheelSvg');
       buildWheel(_filterByPlaylist(_games), svgEl);
 
-      var pl = localStorage.getItem('moment_playlist') || 'all';
-      var labels = { all:'Spin!', new:'Spin New!', top:'Spin Top!', felix:"Spin Felix's!", mix:'Spin Mix!' };
+      var pl = getPlaylist();
+      var labels = { explore:'Spin!', new:'Spin New!', top:'Spin Top!', felix:"Spin Felix's!", mix:'Spin Mix!' };
       spinBtn.disabled = false;
       spinBtn.textContent = labels[pl] || 'Spin!';
 
@@ -245,7 +246,9 @@
 
       var svgEl      = document.getElementById('wheelSvg');
       var wheelGames = svgEl._games || _games;
-      var game       = selectNextGame(wheelGames.length >= 2 ? wheelGames : _games);
+      // Seed the pick from the click time so each spin gets its own sequence.
+      var rng        = makeClickRng(Date.now());
+      var game       = selectNextGame(wheelGames.length >= 2 ? wheelGames : _games, rng);
       var curRot     = getWheelRotation();
 
       spinTo(game.id, curRot, svgEl, async function(finalRot) {

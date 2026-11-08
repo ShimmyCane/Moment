@@ -4,12 +4,16 @@
   window._supabaseConnected = window._supabaseConnected || false;
 
   var PLAYLISTS = [
-    { id: 'all',   label: 'All' },
-    { id: 'new',   label: 'New' },
-    { id: 'top',   label: '⭐ Top' },
-    { id: 'felix', label: "Felix's" },
-    { id: 'mix',   label: 'Mix' }
+    { id: 'explore', label: 'Explore' },
+    { id: 'new',     label: 'New' },
+    { id: 'top',     label: '⭐ Top' },
+    { id: 'felix',   label: "Felix's" },
+    { id: 'mix',     label: 'Mix' }
   ];
+
+  // One-time reset so browsers that saved an older choice (e.g. Top) land on Explore.
+  var PLAYLIST_MIGRATION_KEY = 'moment_playlist_migrated';
+  var PLAYLIST_MIGRATION_VER = '0.4';
 
   var GAME_JSON_TEMPLATE = {
     slug: 'my-new-game',
@@ -78,8 +82,14 @@
       container.appendChild(errPanel);
     }
 
-    var pl = localStorage.getItem('moment_playlist') || 'all';
-    _setActivePlaylist(pl, false);
+    try {
+      if (localStorage.getItem(PLAYLIST_MIGRATION_KEY) !== PLAYLIST_MIGRATION_VER) {
+        setPlaylist(DEFAULT_PLAYLIST);
+        localStorage.setItem(PLAYLIST_MIGRATION_KEY, PLAYLIST_MIGRATION_VER);
+      }
+    } catch (_) {}
+
+    _setActivePlaylist(getPlaylist(), false);
 
     var stored = localStorage.getItem('moment_show_errors') === '1';
     document.getElementById('showErrorsToggle').checked = stored;
@@ -118,6 +128,11 @@
     document.getElementById('loadFeedbackBtn').addEventListener('click', function (e) {
       e.stopPropagation();
       _loadFeedback();
+    });
+
+    document.getElementById('projectNoteAddBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      _addProjectNote();
     });
 
     document.getElementById('copyTemplateBtn').addEventListener('click', function (e) {
@@ -218,6 +233,7 @@
     var res = await sb.auth.signInWithPassword({ email: email, password: pass });
     if (res.error) { errEl.textContent = res.error.message; return; }
     _renderAccount();
+    _loadNotes();
   }
 
   async function _signOut() {
@@ -239,6 +255,123 @@
     _panel.querySelectorAll('.settings-section').forEach(function (s) {
       s.classList.toggle('active', s.id === 'section-' + tabId);
     });
+    if (tabId === 'notes') _loadNotes();
+  }
+
+  // ── Project notes (Supabase table: project_notes) ─────────────
+  // Notes are shared across the family's devices, so they live in Supabase,
+  // not localStorage. Reading and writing require a signed-in session.
+
+  async function _hasSignedInSession(sb) {
+    var res = await sb.auth.getSession();
+    return !!(res.data && res.data.session);
+  }
+
+  async function _loadNotes() {
+    var list = document.getElementById('projectNoteList');
+    if (!list) return;
+
+    var sb = (typeof getClient === 'function') ? getClient() : null;
+    if (!sb) { list.innerHTML = '<p class="settings-error">Supabase not connected.</p>'; return; }
+
+    if (!(await _hasSignedInSession(sb))) {
+      list.innerHTML = '<p class="settings-hint">Sign in on the General tab to view and add project notes.</p>';
+      return;
+    }
+
+    list.innerHTML = '<p class="settings-hint">Loading…</p>';
+    var res = await sb.from('project_notes')
+      .select('id, body, created_at')
+      .order('created_at', { ascending: false });
+
+    if (res.error) {
+      list.innerHTML = '<p class="settings-error">' + _esc(res.error.message) + '</p>' +
+        '<p class="settings-hint">Run sql/2026-11-08_project_notes.sql in the Supabase SQL Editor once.</p>';
+      return;
+    }
+    _renderNotes(res.data || []);
+  }
+
+  function _renderNotes(notes) {
+    var list = document.getElementById('projectNoteList');
+    if (!list) return;
+    if (notes.length === 0) {
+      list.innerHTML = '<p class="settings-hint">No project notes yet.</p>';
+      return;
+    }
+    list.innerHTML = notes.map(function (n) {
+      var when = new Date(n.created_at).toLocaleString();
+      return '<div class="fb-card note-card" data-note-id="' + _esc(n.id) + '">' +
+               '<div class="fb-card-row">' +
+                 '<span class="note-body">' + _esc(n.body) + '</span>' +
+                 '<button class="fb-delete-btn" data-note-id="' + _esc(n.id) + '" aria-label="Delete note">✕</button>' +
+               '</div>' +
+               '<div class="note-time">' + _esc(when) + '</div>' +
+             '</div>';
+    }).join('');
+
+    list.querySelectorAll('.fb-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        _deleteNote(btn.dataset.noteId);
+      });
+    });
+  }
+
+  async function _addProjectNote() {
+    var input    = document.getElementById('projectNoteInput');
+    var resultEl = document.getElementById('projectNoteResult');
+    var body     = (input.value || '').trim();
+
+    if (!body) { resultEl.innerHTML = '<div class="error-item">Write something first.</div>'; return; }
+
+    var sb = (typeof getClient === 'function') ? getClient() : null;
+    if (!sb) { resultEl.innerHTML = '<div class="error-item">Supabase not connected.</div>'; return; }
+    if (!(await _hasSignedInSession(sb))) {
+      resultEl.innerHTML = '<div class="error-item">Sign in on the General tab first.</div>';
+      return;
+    }
+
+    var res = await sb.from('project_notes').insert({ body: body }).select('id').single();
+    if (res.error) {
+      resultEl.innerHTML = '<div class="error-item">Save failed: ' + _esc(res.error.message) + '</div>';
+      return;
+    }
+    input.value = '';
+    resultEl.innerHTML = '<div class="success-msg">✓ Note added</div>';
+    _loadNotes();
+  }
+
+  async function _deleteNote(noteId) {
+    var resultEl = document.getElementById('projectNoteResult');
+    var sb = (typeof getClient === 'function') ? getClient() : null;
+    if (!sb) return;
+
+    var res = await sb.from('project_notes').delete().eq('id', noteId);
+    if (res.error) {
+      resultEl.innerHTML = '<div class="error-item">Delete failed: ' + _esc(res.error.message) + '</div>';
+      return;
+    }
+    _loadNotes();
+  }
+
+  // ── Log tab (version history from js/version.js) ──────────────
+
+  function _buildChangelogHTML() {
+    var entries = window.MOMENT_CHANGELOG || [];
+    if (entries.length === 0) return '<p class="settings-hint">No log entries yet.</p>';
+
+    return entries.map(function (entry, i) {
+      var head = '<div class="log-head">' +
+                   '<span class="log-version">v' + _esc(entry.version) + '</span>' +
+                   (i === 0 ? '<span class="log-current">current</span>' : '') +
+                   '<span class="log-date">' + _esc(entry.date) + '</span>' +
+                 '</div>';
+      var items = '<ul class="log-list">' + entry.changes.map(function (c) {
+        return '<li>' + _esc(c) + '</li>';
+      }).join('') + '</ul>';
+      return '<div class="log-entry">' + head + items + '</div>';
+    }).join('');
   }
 
   // ── Panel HTML ────────────────────────────────────────────────
@@ -253,8 +386,10 @@
 
     html += '<div class="settings-tabs">' +
               '<button class="settings-tab active" data-tab="general">General</button>' +
+              '<button class="settings-tab" data-tab="notes">Notes</button>' +
               '<button class="settings-tab" data-tab="feedback">Feedback</button>' +
               '<button class="settings-tab" data-tab="add-game">Add Game</button>' +
+              '<button class="settings-tab" data-tab="log">Log</button>' +
             '</div>';
 
     html += '<div class="settings-content">';
@@ -284,7 +419,22 @@
     html += '<div class="settings-section-label">Account</div>';
     html += '<div id="accountBox"></div>';
 
+    html += '<div class="settings-divider"></div>';
+    html += '<div class="settings-version">Moment v' + _esc(window.MOMENT_VERSION || '?') + '</div>';
+
     html += '</div>'; // section-general
+
+    // ── Notes (project-wide, not tied to a game) ──
+    html += '<div id="section-notes" class="settings-section">';
+    html += '<div class="settings-section-label">Project Notes</div>';
+    html += '<p class="settings-hint" style="margin-bottom:8px">General notes about the whole app. For a single game, use Feedback.</p>';
+    html += '<textarea id="projectNoteInput" class="settings-json-editor" style="min-height:90px" maxlength="2000" placeholder="Write a note…"></textarea>';
+    html += '<div class="settings-btn-row">' +
+              '<button id="projectNoteAddBtn" class="btn btn-primary">Add note</button>' +
+            '</div>';
+    html += '<div id="projectNoteResult" class="validation-area"></div>';
+    html += '<div id="projectNoteList" class="feedback-list-wrap"></div>';
+    html += '</div>'; // section-notes
 
     // ── Feedback ──
     html += '<div id="section-feedback" class="settings-section">';
@@ -316,6 +466,11 @@
     html += '</div>';
 
     html += '</div>'; // section-add-game
+
+    // ── Log (version history) ──
+    html += '<div id="section-log" class="settings-section">';
+    html += _buildChangelogHTML();
+    html += '</div>'; // section-log
 
     html += '</div>'; // settings-content
 
@@ -730,7 +885,7 @@
 
   function _setActivePlaylist(id, save) {
     if (save) {
-      localStorage.setItem('moment_playlist', id);
+      setPlaylist(id);
       if (typeof window._onPlaylistChange === 'function') window._onPlaylistChange(id);
     }
     PLAYLISTS.forEach(function (pl) {
@@ -739,7 +894,7 @@
     });
     var spinBtn = document.getElementById('spinBtn');
     if (spinBtn && !spinBtn.disabled) {
-      var names = { all: 'Spin!', new: 'Spin New!', top: 'Spin Top!', felix: "Spin Felix's!", mix: 'Spin Mix!' };
+      var names = { explore: 'Spin!', new: 'Spin New!', top: 'Spin Top!', felix: "Spin Felix's!", mix: 'Spin Mix!' };
       spinBtn.textContent = names[id] || 'Spin!';
     }
   }

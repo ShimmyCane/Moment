@@ -616,13 +616,14 @@ body {
 
 .settings-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   padding: 10px 16px;
   border-bottom: 2px dashed #e5e7eb;
   flex-shrink: 0;
 }
 .settings-tab {
-  padding: 5px 14px;
+  padding: 5px 10px;
   font-family: 'Quicksand', sans-serif;
   font-size: 13px;
   font-weight: 800;
@@ -1174,9 +1175,9 @@ body {
 
 /* ── Gear Error Badge ──────────────────────────────────────── */
 
-#gearBtn {
-  position: relative;
-}
+/* No position override here: .floating-gear is position: fixed, which already
+   makes it the containing block for the badge. An ID rule with
+   position: relative used to knock the gear out of the lower-right corner. */
 #gearBtn[data-error-count]:not([data-error-count=""])::after {
   content: attr(data-error-count);
   position: absolute;
@@ -1366,3 +1367,75 @@ body {
 
 .hidden { display: none !important; }
 .center { text-align: center; }
+
+/* ── v0.4: settings bottom padding, version, notes, log ───── */
+
+/* The floating gear sits above the settings sheet (z-index 100 > 99),
+   so keep the last controls clear of its lower-right corner. */
+.settings-content {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.settings-version {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.note-card {
+  display: block;
+  margin-top: 10px;
+  padding: 10px 12px;
+}
+.note-body {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.note-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.log-entry {
+  background: var(--bg-card);
+  border: 2px solid var(--ink);
+  border-radius: 14px 18px 14px 18px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.log-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.log-version {
+  font-family: 'Orbitron', 'Quicksand', sans-serif;
+  font-size: 14px;
+}
+.log-current {
+  font-size: 10px;
+  text-transform: uppercase;
+  background: var(--mint);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+.log-date {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.log-list {
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+}
