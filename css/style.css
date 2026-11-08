@@ -1439,3 +1439,17 @@ body {
   line-height: 1.5;
   font-weight: 600;
 }
+
+/* ── v0.5: flick wheel hint ──────────────────────────────── */
+.flick-hint {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--sun);
+  border: var(--bold-border);
+  border-radius: 14px 20px 14px 20px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 12px 22px;
+  text-align: center;
+}

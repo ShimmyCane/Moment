@@ -5,9 +5,18 @@
 //   • A PR where the user states a major upgrade bumps MAJOR and resets MINOR (0.5 → 1.0).
 //   • Add the new entry at the TOP of MOMENT_CHANGELOG in the same PR.
 
-window.MOMENT_VERSION = '0.4';
+window.MOMENT_VERSION = '0.5';
 
 window.MOMENT_CHANGELOG = [
+  {
+    version: '0.5',
+    date: '2026-11-08',
+    changes: [
+      'Flick wheel: drag the wheel and let go. Turn it on in Settings › General › Wheel control. The Spin button stays the default.',
+      'Pegs around the rim click as each wedge passes the pointer, and the pointer flicks with them.',
+      'Flick speed is capped, so a hard flick is needed. The stop takes 1.5 seconds.'
+    ]
+  },
   {
     version: '0.4',
     date: '2026-11-08',

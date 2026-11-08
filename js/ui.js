@@ -119,6 +119,16 @@
       }
     });
 
+    ['spin', 'flick'].forEach(function (m) {
+      document.getElementById('wm-' + m).addEventListener('click', function (e) {
+        e.stopPropagation();
+        setWheelMode(m);
+        _setWheelModeActive(m);
+        if (typeof window._onWheelModeChange === 'function') window._onWheelModeChange();
+      });
+    });
+    _setWheelModeActive(getWheelMode());
+
     document.getElementById('showErrorsToggle').addEventListener('change', function () {
       var show = this.checked;
       localStorage.setItem('moment_show_errors', show ? '1' : '0');
@@ -408,6 +418,12 @@
       html += '<button id="pl-' + pl.id + '" class="pl-btn" data-pl="' + pl.id + '">' + pl.label + '</button>';
     });
     html += '</div>';
+
+    html += '<div class="settings-section-label">Wheel control</div>';
+    html += '<div class="playlist-row">' +
+              '<button id="wm-spin" class="pl-btn" data-wm="spin">Spin button</button>' +
+              '<button id="wm-flick" class="pl-btn" data-wm="flick">Flick wheel</button>' +
+            '</div>';
 
     html += '<div class="settings-divider"></div>';
     html += '<label class="settings-row">' +
@@ -897,6 +913,13 @@
       var names = { explore: 'Spin!', new: 'Spin New!', top: 'Spin Top!', felix: "Spin Felix's!", mix: 'Spin Mix!' };
       spinBtn.textContent = names[id] || 'Spin!';
     }
+  }
+
+  function _setWheelModeActive(mode) {
+    ['spin', 'flick'].forEach(function (m) {
+      var btn = document.getElementById('wm-' + m);
+      if (btn) btn.classList.toggle('pl-active', m === mode);
+    });
   }
 
   // ── Error panel ───────────────────────────────────────────────

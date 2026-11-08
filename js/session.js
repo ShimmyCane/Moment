@@ -135,6 +135,19 @@ function setPlaylist(id) {
   try { localStorage.setItem(PLAYLIST_KEY, id); } catch {}
 }
 
+// ── Wheel control: 'spin' (button) or 'flick' (drag the wheel) ──
+
+const WHEEL_MODE_KEY = 'moment_wheel_mode';
+
+function getWheelMode() {
+  try { return localStorage.getItem(WHEEL_MODE_KEY) === 'flick' ? 'flick' : 'spin'; }
+  catch { return 'spin'; }
+}
+
+function setWheelMode(mode) {
+  try { localStorage.setItem(WHEEL_MODE_KEY, mode); } catch {}
+}
+
 // ── Click-seeded randomness ─────────────────────────────────
 // Each spin gets its own seed from the time of the click (seconds and
 // milliseconds) mixed with crypto randomness. Seconds alone only give 60
