@@ -51,14 +51,18 @@
 
     <!-- Spin button -->
     <button class="spin-btn" id="spinBtn" disabled>Loading…</button>
+    <p id="flickHint" class="flick-hint hidden">Flick the wheel to spin</p>
 
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/lock.js"></script>
   <script src="js/db.js"></script>
   <script src="js/session.js"></script>
   <script src="js/wheel.js"></script>
+  <script src="js/flick.js"></script>
+  <script src="js/version.js"></script>
   <script src="js/ui.js"></script>
   <script>
     var _games   = [];
@@ -105,7 +109,7 @@
     }
 
     function _filterByPlaylist(games) {
-      var pl = localStorage.getItem('moment_playlist') || 'all';
+      var pl = getPlaylist();
       var filtered;
 
       if (pl === 'new') {
@@ -218,19 +222,28 @@
 
       var svgEl = document.getElementById('wheelSvg');
       buildWheel(_filterByPlaylist(_games), svgEl);
+      drawPegs(svgEl);
 
-      var pl = localStorage.getItem('moment_playlist') || 'all';
-      var labels = { all:'Spin!', new:'Spin New!', top:'Spin Top!', felix:"Spin Felix's!", mix:'Spin Mix!' };
+      var pl = getPlaylist();
+      var labels = { explore:'Spin!', new:'Spin New!', top:'Spin Top!', felix:"Spin Felix's!", mix:'Spin Mix!' };
       spinBtn.disabled = false;
       spinBtn.textContent = labels[pl] || 'Spin!';
 
       spinBtn.addEventListener('click', onSpin);
+
+      initFlickWheel(svgEl, {
+        isEnabled: function () { return !_spinning && getWheelMode() === 'flick'; },
+        onLand: function (game) { revealGame(game); }
+      });
+      applyWheelMode();
+      window._onWheelModeChange = applyWheelMode;
 
       // Rebuild wheel and update label when playlist changes
       window._onPlaylistChange = function(id) {
         if (_spinning) return;
         setWheelRotation(0);
         buildWheel(_filterByPlaylist(_games), svgEl);
+        drawPegs(svgEl);
         spinBtn.textContent = labels[id] || 'Spin!';
       };
     }
@@ -245,29 +258,46 @@
 
       var svgEl      = document.getElementById('wheelSvg');
       var wheelGames = svgEl._games || _games;
-      var game       = selectNextGame(wheelGames.length >= 2 ? wheelGames : _games);
+      // Seed the pick from the click time so each spin gets its own sequence.
+      var rng        = makeClickRng(Date.now());
+      var game       = selectNextGame(wheelGames.length >= 2 ? wheelGames : _games, rng);
       var curRot     = getWheelRotation();
 
-      spinTo(game.id, curRot, svgEl, async function(finalRot) {
+      spinTo(game.id, curRot, svgEl, function(finalRot) {
         setWheelRotation(finalRot);
-        setCurrentGame(game);
-
-        var session = getSession();
-        var eventId = await createPlayEvent(
-          session.sessionId,
-          game.id,
-          game.current_version_id
-        );
-        if (eventId) {
-          var s = getSession();
-          if (s.currentGame) {
-            s.currentGame.playEventId = eventId;
-            sessionStorage.setItem('moment_session', JSON.stringify(s));
-          }
-        }
-
-        showGameReveal(game);
+        revealGame(game);
       });
+    }
+
+    // Shared by the Spin button and flick mode once the wheel has stopped.
+    async function revealGame(game) {
+      _spinning = true;
+      setCurrentGame(game);
+
+      var session = getSession();
+      var eventId = await createPlayEvent(
+        session.sessionId,
+        game.id,
+        game.current_version_id
+      );
+      if (eventId) {
+        var s = getSession();
+        if (s.currentGame) {
+          s.currentGame.playEventId = eventId;
+          sessionStorage.setItem('moment_session', JSON.stringify(s));
+        }
+      }
+
+      showGameReveal(game);
+    }
+
+    // Spin button or flick hint, depending on the wheel-control setting.
+    function applyWheelMode() {
+      var flick   = getWheelMode() === 'flick';
+      var spinBtn = document.getElementById('spinBtn');
+      var hint    = document.getElementById('flickHint');
+      if (spinBtn) spinBtn.classList.toggle('hidden', flick);
+      if (hint)    hint.classList.toggle('hidden', !flick);
     }
 
     init();

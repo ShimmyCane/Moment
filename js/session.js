@@ -118,7 +118,61 @@ function setCachedGames(games) {
 
 // ── Smart Game Selection ─────────────────────────────────────
 
-function selectNextGame(games) {
+// ── Playlist choice ─────────────────────────────────────────
+
+const PLAYLIST_KEY     = 'moment_playlist';
+const DEFAULT_PLAYLIST = 'explore';
+
+function getPlaylist() {
+  try {
+    const id = localStorage.getItem(PLAYLIST_KEY);
+    if (!id || id === 'all') return DEFAULT_PLAYLIST; // 'all' was renamed to 'explore'
+    return id;
+  } catch { return DEFAULT_PLAYLIST; }
+}
+
+function setPlaylist(id) {
+  try { localStorage.setItem(PLAYLIST_KEY, id); } catch {}
+}
+
+// ── Wheel control: 'spin' (button) or 'flick' (drag the wheel) ──
+
+const WHEEL_MODE_KEY = 'moment_wheel_mode';
+
+function getWheelMode() {
+  try { return localStorage.getItem(WHEEL_MODE_KEY) === 'flick' ? 'flick' : 'spin'; }
+  catch { return 'spin'; }
+}
+
+function setWheelMode(mode) {
+  try { localStorage.setItem(WHEEL_MODE_KEY, mode); } catch {}
+}
+
+// ── Click-seeded randomness ─────────────────────────────────
+// Each spin gets its own seed from the time of the click (seconds and
+// milliseconds) mixed with crypto randomness. Seconds alone only give 60
+// possible seeds, so the milliseconds and the crypto value are mixed in too.
+
+function _mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function makeClickRng(clickMs = Date.now()) {
+  const d = new Date(clickMs);
+  const timePart = d.getSeconds() * 1000 + d.getMilliseconds();
+  const entropy = new Uint32Array(1);
+  crypto.getRandomValues(entropy);
+  const seed = Math.imul(timePart + 1, 2654435761) ^ entropy[0];
+  return _mulberry32(seed);
+}
+
+function selectNextGame(games, rng = Math.random) {
   const session  = _read();
   const history  = session ? session.history : [];
   const lastCat  = history.length > 0 ? history[history.length - 1].category : null;
@@ -142,7 +196,7 @@ function selectNextGame(games) {
   });
 
   const total = weighted.reduce((s, x) => s + x.weight, 0);
-  let rand = Math.random() * total;
+  let rand = rng() * total;
   for (const { game, weight } of weighted) {
     rand -= weight;
     if (rand <= 0) return game;
